@@ -1,0 +1,4 @@
+bin/
+build/
+roms/chip8/
+.cache/
