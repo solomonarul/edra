@@ -10,10 +10,10 @@ br:
 	@cmake --build build/release --parallel 12
 	@cmake -E make_directory bin
 	@cmake -E copy build/release/compile_commands.json build/compile_commands.json
-	@cmake -E copy build/release/EBox.exe bin/release/EBox.exe
+	@cmake -E copy build/release/app.exe bin/release/app.exe
 
 rr: br
-	@./bin/release/EBox.exe
+	@./bin/release/app.exe
 
 bd:
 	@cmake -E make_directory build
@@ -23,11 +23,11 @@ bd:
 	@cmake -E copy build/debug/compile_commands.json build/compile_commands.json
 	@cmake -E copy build/debug/lib/auxum/auxum_test.exe bin/debug/test/auxum_test.exe
 	@cmake -E copy build/debug/lib/cchip8/cchip8_test.exe bin/debug/test/cchip8_test.exe
-	@cmake -E copy build/debug/EBox.pdb bin/debug/EBox.pdb
-	@cmake -E copy build/debug/EBox.exe bin/debug/EBox.exe
+	@cmake -E copy build/debug/app.pdb bin/debug/app.pdb
+	@cmake -E copy build/debug/app.exe bin/debug/app.exe
 
 rd: bd
-	@./bin/debug/EBox.exe
+	@./bin/debug/app.exe
 
 t:
 	@./bin/debug/test/auxum_test.exe

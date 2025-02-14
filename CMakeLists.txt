@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 
 add_subdirectory(lib)
 
-project(EBox)
+project(app)
 
 file(
     GLOB_RECURSE
