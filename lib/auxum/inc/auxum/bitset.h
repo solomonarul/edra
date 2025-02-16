@@ -16,7 +16,7 @@ void bitset_init(bitset_t* const self, int size);
 /*
  *  Gets the bit at the specified position.
  */
-bool bitset_get(bitset_t const self, int position);
+bool bitset_get(bitset_t* const self, int position);
 
 /*
  *  Sets the bit at the specified position.

@@ -31,8 +31,10 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
     chip8_state_t* const state = self->state;
 
     assert(state != NULL);
-
-    const uint16_t opcode = state->read_w(state->pc);
+    assert(state->read_w != NULL);
+    assert(state->read_b != NULL);
+    assert(state->write_b != NULL);
+    const uint16_t opcode = state->read_w(state->aux_arg, state->pc);
 
     #define NOOO (opcode & 0xF000)
     #define OOON (opcode & 0x000F)
@@ -48,7 +50,7 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
         // CLS
         case 0xE0:
             assert(state->clear_screen != NULL);
-            state->clear_screen();
+            state->clear_screen(state->aux_arg);
             state->pc += 2;
             break;
 
@@ -230,7 +232,7 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
 
     // RND Vx, NN
     case 0xC000:
-        state->v[X] = state->get_random() & OONN;
+        state->v[X] = state->get_random(state->aux_arg) & OONN;
         state->pc += 2;
         break;
 
@@ -239,7 +241,7 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
         assert(state->draw_sprite != NULL);
         if(state->draw_flag)
         {
-            state->v[0xF] = state->draw_sprite(state->i, state->v[X], state->v[Y], OOON);
+            state->v[0xF] = state->draw_sprite(state->aux_arg, state->i, state->v[X], state->v[Y], OOON);
             state->pc += 2;
             state->draw_flag = false;
         }
@@ -252,13 +254,13 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
         // SKKP Vx
         case 0x9E:
             assert(state->get_key_status);
-            state->pc += 2 + (state->get_key_status(state->v[X])) * 2;
+            state->pc += 2 + (state->get_key_status(state->aux_arg, state->v[X])) * 2;
             break;
 
         // SKNP Vx
         case 0xA1:
             assert(state->get_key_status);
-            state->pc += 2 + !(state->get_key_status(state->v[X])) * 2;
+            state->pc += 2 + !(state->get_key_status(state->aux_arg, state->v[X])) * 2;
             break;
 
         default:
@@ -283,14 +285,14 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
             if(state->last_key == 0x10)
             {
                 for(uint8_t index = 0; index < 0x10; index++)
-                    if(state->get_key_status(index))
+                    if(state->get_key_status(state->aux_arg, index))
                     {
                         state->last_key = index;
                         break;
                     }
             }
             // Key has been pressed already, wait for release.
-            else if(!state->get_key_status(state->last_key))
+            else if(!state->get_key_status(state->aux_arg, state->last_key))
             {
                 state->last_key = 0x10;
                 state->pc += 2;
@@ -325,14 +327,14 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
         case 0x33:
             uint8_t value = state->v[X];
             for(uint8_t index = 0; index < 3; index++)
-                state->write_b(state->i + 2 - index, value % 10), value /= 10;
+                state->write_b(state->aux_arg, state->i + 2 - index, value % 10), value /= 10;
             state->pc += 2;
             break;
 
         // STR Vx
         case 0x55:
             for(uint8_t index = 0; index <= X; index++)
-                state->write_b(state->i + index, state->v[index]);
+                state->write_b(state->aux_arg, state->i + index, state->v[index]);
             state->i += X + 1;  // NOTE: only in vanilla CHIP8. Check quirks test,
             state->pc += 2;
             break;
@@ -340,7 +342,7 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
         // LDR Vx
         case 0x65:
             for(uint8_t index = 0; index <= X; index++)
-                state->v[index] = state->read_b(state->i + index);
+                state->v[index] = state->read_b(state->aux_arg, state->i + index);
             state->i += X + 1; // NOTE: only in vanilla CHIP8. Check quirks test,
             state->pc += 2;
             break;        

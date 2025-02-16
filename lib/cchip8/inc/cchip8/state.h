@@ -5,15 +5,15 @@
 #include <stdio.h>
 #include <stdint.h>
 
-typedef uint8_t(*chip8_read_b_f)(uint16_t);
-typedef uint16_t(*chip8_read_w_f)(uint16_t);
-typedef void(*chip8_write_b_f)(uint16_t, uint8_t);
-typedef bool(*chip8_draw_sprite_f)(uint16_t, uint8_t, uint8_t, uint8_t);
-typedef void(*chip8_clear_f)();
-typedef void(*chip8_set_dt_f)(uint8_t);
-typedef uint8_t(*chip8_get_dt_f)();
-typedef bool(*chip8_key_status_f)(uint8_t);
-typedef uint8_t(*chip8_random_f)();
+typedef uint8_t(*chip8_read_b_f)(void*, uint16_t);
+typedef uint16_t(*chip8_read_w_f)(void*, uint16_t);
+typedef void(*chip8_write_b_f)(void*, uint16_t, uint8_t);
+typedef bool(*chip8_draw_sprite_f)(void*, uint16_t, uint8_t, uint8_t, uint8_t);
+typedef void(*chip8_clear_f)(void*);
+typedef void(*chip8_set_dt_f)(void*, uint8_t);
+typedef uint8_t(*chip8_get_dt_f)(void*);
+typedef bool(*chip8_key_status_f)(void*, uint8_t);
+typedef uint8_t(*chip8_random_f)(void*);
 
 struct chip8_state
 {
@@ -27,6 +27,7 @@ struct chip8_state
     chip8_clear_f clear_screen;
     chip8_key_status_f get_key_status;
     chip8_random_f get_random;
+    void* aux_arg;
 };
 typedef struct chip8_state chip8_state_t;
 
