@@ -17,6 +17,7 @@ typedef uint8_t(*chip8_random_f)();
 
 struct chip8_state
 {
+    bool draw_flag;
     uint16_t pc, i, stack[0x100];
     uint8_t v[0x10], sp, dt, st, last_key;
     chip8_read_b_f read_b;

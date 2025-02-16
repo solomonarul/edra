@@ -23,6 +23,8 @@ void clear_screen()
 
 bool draw_sprite(uint16_t address, uint8_t x, uint8_t y, uint8_t n)
 {
+    x %= 64;
+    y %= 32;
     bool collision = false;
     for(uint16_t index = address; index < address + n; index++)
     {

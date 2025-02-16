@@ -21,6 +21,7 @@ void chip8_interpreter_update_timers(chip8_interpreter_t* self, double dt)
     self->timer += dt;
     int remainder = self->timer / (1.0 / 60);
     self->timer -= 1.0 * remainder / 60;
+    self->state->draw_flag = (remainder > 0) ? true : self->state->draw_flag;
     self->state->dt = (self->state->dt < remainder) ? 0 : (self->state->dt - remainder);
     self->state->st = (self->state->st < remainder) ? 0 : (self->state->st - remainder);
 }
@@ -236,8 +237,12 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
     // DRW, X, Y, N
     case 0xD000:
         assert(state->draw_sprite != NULL);
-        state->v[0xF] = state->draw_sprite(state->i, state->v[X], state->v[Y], OOON);
-        state->pc += 2;
+        if(state->draw_flag)
+        {
+            state->v[0xF] = state->draw_sprite(state->i, state->v[X], state->v[Y], OOON);
+            state->pc += 2;
+            state->draw_flag = false;
+        }
         break;
 
     // Keys

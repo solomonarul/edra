@@ -10,6 +10,7 @@ void chip8_state_init(chip8_state_t* self)
     self->read_b = chip8_memory_read_b; self->read_w = chip8_memory_read_w; self->write_b = chip8_memory_write_b;
     self->dt = 0; self->st = 0; self->last_key = 0x10; self->get_random = NULL;
     self->draw_sprite = NULL; self->clear_screen = NULL; self->get_key_status = NULL;
+    self->draw_flag = false;
 }
 
 void chip8_state_log(chip8_state_t* self, FILE* file)
