@@ -5,21 +5,27 @@
 #include <stdio.h>
 #include <stdint.h>
 
-typedef uint8_t(*chip8_read_b_t)(uint16_t);
-typedef uint16_t(*chip8_read_w_t)(uint16_t);
-typedef void(*chip8_write_b_t)(uint16_t, uint8_t);
-typedef bool(*chip8_draw_sprite_t)(uint16_t, uint8_t, uint8_t, uint8_t);
-typedef void(*chip8_clear_t)();
+typedef uint8_t(*chip8_read_b_f)(uint16_t);
+typedef uint16_t(*chip8_read_w_f)(uint16_t);
+typedef void(*chip8_write_b_f)(uint16_t, uint8_t);
+typedef bool(*chip8_draw_sprite_f)(uint16_t, uint8_t, uint8_t, uint8_t);
+typedef void(*chip8_clear_f)();
+typedef void(*chip8_set_dt_f)(uint8_t);
+typedef uint8_t(*chip8_get_dt_f)();
+typedef bool(*chip8_key_status_f)(uint8_t);
+typedef uint8_t(*chip8_random_f)();
 
 struct chip8_state
 {
-    uint16_t pc, i;
-    uint8_t v[0x10];
-    chip8_read_b_t read_b;
-    chip8_read_w_t read_w;
-    chip8_write_b_t write_b;
-    chip8_draw_sprite_t draw_sprite;
-    chip8_clear_t clear_screen;
+    uint16_t pc, i, stack[0x100];
+    uint8_t v[0x10], sp, dt, st, last_key;
+    chip8_read_b_f read_b;
+    chip8_read_w_f read_w;
+    chip8_write_b_f write_b;
+    chip8_draw_sprite_f draw_sprite;
+    chip8_clear_f clear_screen;
+    chip8_key_status_f get_key_status;
+    chip8_random_f get_random;
 };
 typedef struct chip8_state chip8_state_t;
 

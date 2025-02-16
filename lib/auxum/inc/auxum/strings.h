@@ -3,7 +3,8 @@
 #define AUXUM_STRINGS_H
 
 /*
- *  NOTE: make sure that the result fits into dest, this is unsafe.
+ *  Concatenates two strings and stores the result into dest.
+ *  NOTE: make sure that the result actually fits into dest as this is unsafe.
  */
 void string_concat(char* const dest, char* const first, char* const second);
 

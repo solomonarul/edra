@@ -26,6 +26,12 @@ set_property(
     PROPERTY C_STANDARD 23
 )
 
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC
+        "inc"
+)
+
 find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
 target_link_libraries(
     ${PROJECT_NAME}
