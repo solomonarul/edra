@@ -102,7 +102,7 @@ void cchip8_run(cchip8_context_t* self)
                 timer += 1e9 / self->speed;
             }
             if(!self->cpu.interpreter.running) break;
-            thread_spin_sleep(1e9 / 60, -1);
+            thread_sleep(1e9 / 60);
         }
     }
     fprintf(stderr, "[INFO]: Emulator has stopped.\n");

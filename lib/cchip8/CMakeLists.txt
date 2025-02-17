@@ -33,12 +33,12 @@ target_include_directories(
         "inc/cchip8"
 )
 
-if(${CMAKE_BUILD_PLATFORM} MATCHES "WINDOWS")
+find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
 target_link_libraries(
     ${PROJECT_NAME}
-        winmm.lib
+    PUBLIC
+        SDL3::SDL3
 )
-endif()
 
 set_property(
     TARGET ${PROJECT_NAME}

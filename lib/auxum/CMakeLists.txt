@@ -44,6 +44,13 @@ set_property(
     PROPERTY C_STANDARD 23
 )
 
+find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
+target_link_libraries(
+    ${PROJECT_NAME}
+    PUBLIC
+        SDL3::SDL3
+)
+
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
 add_executable(
     ${PROJECT_NAME}_test

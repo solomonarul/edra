@@ -1,6 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS     // Windows fix for being annoying.
 #include <SDL3/SDL.h>
-#include <threads.h>
 #include <assert.h>
 #include <stdlib.h>
 
@@ -37,7 +36,6 @@ bool get_key_status(void* arg, uint8_t key)
 int main(int argc, char* argv[])
 {
     UNUSED(argc); UNUSED(argv);
-    thread_setup();
     
     // Init the emulator.
     cchip8_context_t emulator;
@@ -109,8 +107,8 @@ int main(int argc, char* argv[])
     SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     // Create CPU thread.
-    thrd_t cpu_thread;
-    if(thrd_create(&cpu_thread, cpu_thread_function, &emulator) != thrd_success)
+    SDL_Thread* cpu_thread = SDL_CreateThread(cpu_thread_function, "c8 cpu thr", &emulator);
+    if(cpu_thread == NULL)
     {
         cchip8_free(&emulator);
         fprintf(stderr, "[EROR]: Could not create emulator thread!\n");
@@ -144,11 +142,11 @@ int main(int argc, char* argv[])
                 if(bitset_get(&emulator.display_memory, x + y * 64))
                     SDL_RenderPoint(renderer, x, y);
         SDL_RenderPresent(renderer);
-        thread_spin_sleep(1e9 / 60, -1);
+        thread_sleep(1e9 / 60);
     }
 
     emulator.cpu.interpreter.running = false;
-    thrd_join(cpu_thread, NULL);
+    SDL_WaitThread(cpu_thread, NULL);
 
     cchip8_free(&emulator);
     SDL_DestroyRenderer(renderer);

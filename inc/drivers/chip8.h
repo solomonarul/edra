@@ -5,7 +5,6 @@
 #include <auxum/bitset.h>
 #include <cchip8/state.h>
 #include <cchip8/cpu/interpreter.h>
-#include <threads.h>
 
 struct cchip8_context {
     chip8_state_t state;

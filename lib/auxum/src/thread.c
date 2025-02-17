@@ -1,38 +1,12 @@
 #include "thread.h"
-#include <threads.h>
-#ifdef BUILD_TYPE_WINDOWS
-#include <windows.h>
-#include <timeapi.h>
-#endif
+#include <SDL3/SDL.h>
 
-void thread_setup(void)
+uint64_t thread_get_nanos(void)
 {
-#ifdef BUILD_TYPE_WINDOWS
-    timeBeginPeriod(1);
-#endif
+    return SDL_GetPerformanceCounter() * 1.0 / SDL_GetPerformanceFrequency() * 1e9;
 }
 
-unsigned long thread_get_nanos(void)
+void thread_sleep(uint64_t nsecs)
 {
-    struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
-    return (unsigned long)ts.tv_sec * 1000000000L + ts.tv_nsec;
-}
-
-void thread_spin_sleep(unsigned long nsecs, unsigned long trusted_nsecs)
-{
-    // Sleep for a multiple of trusted_nsecs.
-    if(trusted_nsecs == (unsigned long)-1) trusted_nsecs = 1000000L + 1;    // ~1ms
-    long count = nsecs / trusted_nsecs;
-#ifdef BUILD_TYPE_WINDOWS
-    Sleep(trusted_nsecs / 1000000L * count);
-#else
-    thrd_sleep(&(struct timespec){.tv_nsec=count * trusted_nsecs}, NULL);
-#endif
-    // Busy loop for the remainder time.
-    long remainder = nsecs % trusted_nsecs;
-    long last_nanos = thread_get_nanos();
-    long current_nanos = last_nanos;
-    while(remainder > current_nanos - last_nanos)
-        current_nanos = thread_get_nanos(), remainder -= current_nanos - last_nanos, last_nanos = current_nanos;
+    SDL_DelayNS(nsecs); // I trust SDL knows better than me on matters like this, I give up. This uses way less CPU time than my crazy ideas.
 }
