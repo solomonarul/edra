@@ -3,7 +3,7 @@
 
 uint64_t thread_get_nanos(void)
 {
-    return SDL_GetPerformanceCounter() * 1.0 / SDL_GetPerformanceFrequency() * 1e9;
+    return SDL_GetPerformanceCounter() * 1.0 / SDL_GetPerformanceFrequency() * SDL_NS_PER_SECOND;
 }
 
 void thread_sleep(uint64_t nsecs)

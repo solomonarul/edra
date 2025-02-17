@@ -1,4 +1,6 @@
+#ifdef BUILD_TYPE_WINDOWS
 #define _CRT_SECURE_NO_WARNINGS     // Windows fix for being annoying.
+#endif
 #include <SDL3/SDL.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -44,7 +46,7 @@ int main(int argc, char* argv[])
     emulator.state.get_key_status = get_key_status;
 
     // Load the ROM.
-    const char* rom_path = "roms/chip8/demos/heart_monitor.ch8";
+    const char* rom_path = "roms/chip8/games/snake.ch8";
     FILE* rom = fopen(rom_path, "rb");
     if(rom == NULL)
     {
@@ -55,26 +57,6 @@ int main(int argc, char* argv[])
     }
     fread((char*)emulator.memory + emulator.state.pc, sizeof(uint8_t), 0x10000 - emulator.state.pc, rom);
     fclose(rom);
-    const uint8_t FONTSET_SIZE = 80;
-    const static uint8_t FONTSET[80] = { 
-        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-        0x20, 0x60, 0x20, 0x20, 0x70, // 1
-        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-        0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-    };
-    memcpy((char*)emulator.memory, FONTSET, sizeof(uint8_t) * FONTSET_SIZE);
 
     // Init SDL subsystem.
     if(!SDL_Init(SDL_INIT_VIDEO))
@@ -136,13 +118,15 @@ int main(int argc, char* argv[])
         SDL_RenderClear(renderer);
 
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
-        // TODO: RWLock this.
+        
+        SDL_LockRWLockForReading(emulator.display_lock);
         for(uint8_t x = 0; x < 64; x++)
             for(uint8_t y = 0; y < 32; y++)
                 if(bitset_get(&emulator.display_memory, x + y * 64))
                     SDL_RenderPoint(renderer, x, y);
+        SDL_UnlockRWLock(emulator.display_lock);
         SDL_RenderPresent(renderer);
-        thread_sleep(1e9 / 60);
+        thread_sleep(SDL_NS_PER_SECOND / 60);
     }
 
     emulator.cpu.interpreter.running = false;

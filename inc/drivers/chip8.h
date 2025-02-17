@@ -5,10 +5,12 @@
 #include <auxum/bitset.h>
 #include <cchip8/state.h>
 #include <cchip8/cpu/interpreter.h>
+#include <SDL3/SDL.h>
 
 struct cchip8_context {
     chip8_state_t state;
     bitset_t display_memory;
+    SDL_RWLock* display_lock;
     uint8_t memory[0x10000];
     uint32_t speed;
     union {

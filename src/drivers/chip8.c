@@ -35,6 +35,7 @@ bool draw_sprite(void* arg, uint16_t address, uint8_t x, uint8_t y, uint8_t n)
     x %= 64;
     y %= 32;
     bool collision = false;
+    SDL_LockRWLockForWriting(self->display_lock);
     for(uint16_t index = address; index < address + n; index++)
     {
         const uint8_t byte = self->memory[index];
@@ -49,6 +50,7 @@ bool draw_sprite(void* arg, uint16_t address, uint8_t x, uint8_t y, uint8_t n)
             bitset_xor(&self->display_memory, position, pixel);
         }
     }
+    SDL_UnlockRWLock(self->display_lock);
     return collision;
 }
 
@@ -70,12 +72,34 @@ void cchip8_init(cchip8_context_t* self)
     self->state.get_random = get_random;
     self->state.aux_arg = self;
     bitset_init(&self->display_memory, 64 * 32);
+    self->display_lock = SDL_CreateRWLock();
 
     // Setup CPU.
     chip8_interpreter_init(&self->cpu.interpreter);
     self->cpu.interpreter.running = true;
     self->cpu.interpreter.state = &self->state;
     self->speed = -1;
+
+    const uint8_t FONTSET_SIZE = 80;
+    const static uint8_t FONTSET[80] = { 
+        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+        0x20, 0x60, 0x20, 0x20, 0x70, // 1
+        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+        0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+    };
+    memcpy((char*)self->memory, FONTSET, sizeof(uint8_t) * FONTSET_SIZE);
 }
 
 void cchip8_run(cchip8_context_t* self)
@@ -94,15 +118,15 @@ void cchip8_run(cchip8_context_t* self)
         }
         else {
             timer = 0;
-            while(timer < 1e9 / 60)
+            while(timer < SDL_NS_PER_SECOND / 75)
             {
                 chip8_interpreter_step(&self->cpu.interpreter);
-                chip8_interpreter_update_timers(&self->cpu.interpreter, 1e9 / self->speed);
+                chip8_interpreter_update_timers(&self->cpu.interpreter, SDL_NS_PER_SECOND / self->speed);
                 if(!self->cpu.interpreter.running) break;
-                timer += 1e9 / self->speed;
+                timer += SDL_NS_PER_SECOND / self->speed;
             }
             if(!self->cpu.interpreter.running) break;
-            thread_sleep(1e9 / 60);
+            thread_sleep(SDL_NS_PER_SECOND / 75);
         }
     }
     fprintf(stderr, "[INFO]: Emulator has stopped.\n");
@@ -111,4 +135,5 @@ void cchip8_run(cchip8_context_t* self)
 void cchip8_free(cchip8_context_t* self)
 {
     bitset_free(&self->display_memory);
+    SDL_DestroyRWLock(self->display_lock);
 }
