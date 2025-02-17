@@ -5,12 +5,16 @@
 #include <auxum/bitset.h>
 #include <cchip8/state.h>
 #include <cchip8/cpu/interpreter.h>
+#include <threads.h>
 
 struct cchip8_context {
     chip8_state_t state;
     bitset_t display_memory;
     uint8_t memory[0x10000];
-    chip8_interpreter_t* cpu;
+    uint32_t speed;
+    union {
+        chip8_interpreter_t interpreter;
+    } cpu;
 };
 typedef struct cchip8_context cchip8_context_t;
 

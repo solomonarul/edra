@@ -33,6 +33,12 @@ target_include_directories(
         "inc/auxum"
 )
 
+target_compile_definitions(
+    ${PROJECT_NAME}
+    PRIVATE
+        BUILD_TYPE_${CMAKE_BUILD_PLATFORM}
+)
+
 set_property(
     TARGET ${PROJECT_NAME}
     PROPERTY C_STANDARD 23
@@ -54,6 +60,12 @@ target_link_libraries(
     ${PROJECT_NAME}_test
     PUBLIC
         ${PROJECT_NAME}
+)
+
+target_compile_definitions(
+    ${PROJECT_NAME}_test
+    PRIVATE
+        BUILD_TYPE_${CMAKE_BUILD_PLATFORM}
 )
 
 set_property(

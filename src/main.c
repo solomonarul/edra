@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include <auxum/unused.h>
+#include <auxum/thread.h>
 #include <auxum/strings.h>
 #include <drivers/chip8.h>
 
@@ -14,32 +15,74 @@ int cpu_thread_function(void* args)
     return 0;
 }
 
+bool get_key_status(void* arg, uint8_t key)
+{
+    UNUSED(arg);
+    static SDL_Scancode keys[0x10] = {
+        SDL_SCANCODE_X,
+        SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3,
+        SDL_SCANCODE_Q, SDL_SCANCODE_W, SDL_SCANCODE_E,
+        SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D,
+        SDL_SCANCODE_Z,
+        SDL_SCANCODE_C, SDL_SCANCODE_4, SDL_SCANCODE_R, SDL_SCANCODE_F,
+        SDL_SCANCODE_V,
+    };
+    static int keyboard_state_length;
+    static const bool* keyboard_state;
+    keyboard_state = SDL_GetKeyboardState(&keyboard_state_length);
+    assert(key < 0x10);
+    return keyboard_state[keys[key]];
+}
+
 int main(int argc, char* argv[])
 {
     UNUSED(argc); UNUSED(argv);
+    thread_setup();
     
     // Init the emulator.
     cchip8_context_t emulator;
     cchip8_init(&emulator);
+    emulator.speed = 600;
+    emulator.state.get_key_status = get_key_status;
 
     // Load the ROM.
-    const char* rom_path = "roms/chip8/games/Tetris [Fran Dachille, 1991].ch8";
+    const char* rom_path = "roms/chip8/demos/heart_monitor.ch8";
     FILE* rom = fopen(rom_path, "rb");
     if(rom == NULL)
     {
         cchip8_free(&emulator);
-        fprintf(stderr, "[EROR]: Could not find ROM file at path %s!", rom_path);
+        fprintf(stderr, "[EROR]: Could not find ROM file at path %s!\n", rom_path);
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not load specified ROM file!", NULL);
         return -1;
     }
     fread((char*)emulator.memory + emulator.state.pc, sizeof(uint8_t), 0x10000 - emulator.state.pc, rom);
     fclose(rom);
+    const uint8_t FONTSET_SIZE = 80;
+    const static uint8_t FONTSET[80] = { 
+        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+        0x20, 0x60, 0x20, 0x20, 0x70, // 1
+        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+        0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+    };
+    memcpy((char*)emulator.memory, FONTSET, sizeof(uint8_t) * FONTSET_SIZE);
 
     // Init SDL subsystem.
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
         cchip8_free(&emulator);
-        fprintf(stderr, "[EROR]: Could not initialize SDL! %s", SDL_GetError());
+        fprintf(stderr, "[EROR]: Could not initialize SDL! %s\n", SDL_GetError());
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not initialize SDL3!", NULL);
         return -1;
     }
@@ -50,7 +93,7 @@ int main(int argc, char* argv[])
     if(window == NULL)
     {
         cchip8_free(&emulator);
-        fprintf(stderr, "[EROR]: Could not create SDL3 window! %s", SDL_GetError());
+        fprintf(stderr, "[EROR]: Could not create SDL3 window! %s\n", SDL_GetError());
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not create SDL3 window!", NULL);
         return -1;
     }
@@ -58,7 +101,7 @@ int main(int argc, char* argv[])
     if(renderer == NULL)
     {
         cchip8_free(&emulator);
-        fprintf(stderr, "[EROR]: Could not create SDL3 renderer! %s", SDL_GetError());
+        fprintf(stderr, "[EROR]: Could not create SDL3 renderer! %s\n", SDL_GetError());
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not create SDL3 renderer!", window);
         SDL_DestroyWindow(window);
         return -1;
@@ -70,9 +113,9 @@ int main(int argc, char* argv[])
     if(thrd_create(&cpu_thread, cpu_thread_function, &emulator) != thrd_success)
     {
         cchip8_free(&emulator);
-        fprintf(stderr, "[EROR]: Could not create emulator thread!");
-        SDL_DestroyWindow(window);
+        fprintf(stderr, "[EROR]: Could not create emulator thread!\n");
         SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
         return -1;
     }
 
@@ -101,13 +144,15 @@ int main(int argc, char* argv[])
                 if(bitset_get(&emulator.display_memory, x + y * 64))
                     SDL_RenderPoint(renderer, x, y);
         SDL_RenderPresent(renderer);
-        thrd_sleep(&(struct timespec){.tv_nsec=16666666}, NULL);    // TODO: not really accurate let's implement our own spinlocker later.
+        thread_spin_sleep(1e9 / 60, -1);
     }
 
-    emulator.cpu->running = false;
+    emulator.cpu.interpreter.running = false;
     thrd_join(cpu_thread, NULL);
 
     cchip8_free(&emulator);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
     SDL_Quit();
     
     return 0;

@@ -4,20 +4,20 @@ c:
 	@cmake -E remove_directory build
 	@cmake -E remove_directory bin
 
-br:
+bwr:
 	@cmake -E make_directory build
-	@cmake -B build/release -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G Ninja -DCMAKE_BUILD_TYPE=Release
+	@cmake -B build/release -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_BUILD_PLATFORM=WINDOWS
 	@cmake --build build/release --parallel 12
 	@cmake -E make_directory bin
 	@cmake -E copy build/release/compile_commands.json build/compile_commands.json
 	@cmake -E copy build/release/app.exe bin/release/app.exe
 
-rr: br
+rwr: bwr
 	@./bin/release/app.exe
 
-bd:
+bwd:
 	@cmake -E make_directory build
-	@cmake -B build/debug -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G Ninja -DCMAKE_BUILD_TYPE=Debug
+	@cmake -B build/debug -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_BUILD_PLATFORM=WINDOWS
 	@cmake --build build/debug --parallel 12
 	@cmake -E make_directory bin
 	@cmake -E copy build/debug/compile_commands.json build/compile_commands.json
@@ -26,7 +26,7 @@ bd:
 	@cmake -E copy build/debug/app.pdb bin/debug/app.pdb
 	@cmake -E copy build/debug/app.exe bin/debug/app.exe
 
-rd: bd
+rwd: bwd
 	@./bin/debug/app.exe
 
 t:

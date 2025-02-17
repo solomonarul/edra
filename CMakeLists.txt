@@ -32,6 +32,12 @@ target_include_directories(
         "inc"
 )
 
+target_compile_definitions(
+    ${PROJECT_NAME}
+    PRIVATE
+        BUILD_TYPE_${CMAKE_BUILD_PLATFORM}
+)
+
 find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
 target_link_libraries(
     ${PROJECT_NAME}

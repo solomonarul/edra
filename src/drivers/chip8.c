@@ -1,5 +1,6 @@
 #include "drivers/chip8.h"
 #include <auxum/unused.h>
+#include <auxum/thread.h>
 #include <SDL3/SDL.h>
 #include <assert.h>
 #include <threads.h>
@@ -51,26 +52,6 @@ bool draw_sprite(void* arg, uint16_t address, uint8_t x, uint8_t y, uint8_t n)
     return collision;
 }
 
-bool get_key_status(void* arg, uint8_t key)
-{
-    // TODO: maybe get this SDL out too?
-    UNUSED(arg);
-    static SDL_Scancode keys[0x10] = {
-        SDL_SCANCODE_X,
-        SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3,
-        SDL_SCANCODE_Q, SDL_SCANCODE_W, SDL_SCANCODE_E,
-        SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D,
-        SDL_SCANCODE_Z,
-        SDL_SCANCODE_C, SDL_SCANCODE_4, SDL_SCANCODE_R, SDL_SCANCODE_F,
-        SDL_SCANCODE_V,
-    };
-    static int keyboard_state_length;
-    static const bool* keyboard_state;
-    keyboard_state = SDL_GetKeyboardState(&keyboard_state_length);
-    assert(key < 0x10);
-    return keyboard_state[keys[key]];
-}
-
 uint8_t get_random(void* arg)
 {
     UNUSED(arg);
@@ -86,36 +67,48 @@ void cchip8_init(cchip8_context_t* self)
     self->state.write_b = memory_write_b;
     self->state.draw_sprite = draw_sprite;
     self->state.clear_screen = clear_screen;
-    self->state.get_key_status = get_key_status;
     self->state.get_random = get_random;
     self->state.aux_arg = self;
     bitset_init(&self->display_memory, 64 * 32);
 
-    // Setup CPU. TODO: preferably on the stack
-    self->cpu = malloc(sizeof(chip8_interpreter_t));
-    chip8_interpreter_init(self->cpu);
-    self->cpu->running = true;
-    self->cpu->state = &self->state;
+    // Setup CPU.
+    chip8_interpreter_init(&self->cpu.interpreter);
+    self->cpu.interpreter.running = true;
+    self->cpu.interpreter.state = &self->state;
+    self->speed = -1;
 }
 
 void cchip8_run(cchip8_context_t* self)
 {
-    const int speed = 1000;
+    long start_time, end_time;
+    long timer;
     while(true)
     {
-        chip8_interpreter_step(self->cpu);
-        chip8_interpreter_update_timers(self->cpu, 1.0 / speed);
-        if(!self->cpu->running) break;
-
-        // TODO: maybe not everything supports C23, generalize later.
-        if(speed > 0)
-            thrd_sleep(&(struct timespec){.tv_nsec=1000000000 / speed}, NULL);    // TODO: not really accurate let's implement our own spinlocker later.
+        if(self->speed == (uint32_t)-1)
+        {
+            start_time = thread_get_nanos();
+            chip8_interpreter_step(&self->cpu.interpreter);
+            end_time = thread_get_nanos();
+            chip8_interpreter_update_timers(&self->cpu.interpreter, end_time - start_time + rand() % 100);   // rand() % 100 is a trick cuz the timer is not accurate enough
+            if(!self->cpu.interpreter.running) break;
+        }
+        else {
+            timer = 0;
+            while(timer < 1e9 / 60)
+            {
+                chip8_interpreter_step(&self->cpu.interpreter);
+                chip8_interpreter_update_timers(&self->cpu.interpreter, 1e9 / self->speed);
+                if(!self->cpu.interpreter.running) break;
+                timer += 1e9 / self->speed;
+            }
+            if(!self->cpu.interpreter.running) break;
+            thread_spin_sleep(1e9 / 60, -1);
+        }
     }
-    fprintf(stderr, "[INFO]: Emulator has stopped.");
+    fprintf(stderr, "[INFO]: Emulator has stopped.\n");
 }
 
 void cchip8_free(cchip8_context_t* self)
 {
     bitset_free(&self->display_memory);
-    free(self->cpu);
 }

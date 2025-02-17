@@ -33,6 +33,13 @@ target_include_directories(
         "inc/cchip8"
 )
 
+if(${CMAKE_BUILD_PLATFORM} MATCHES "WINDOWS")
+target_link_libraries(
+    ${PROJECT_NAME}
+        winmm.lib
+)
+endif()
+
 set_property(
     TARGET ${PROJECT_NAME}
     PROPERTY C_STANDARD 23

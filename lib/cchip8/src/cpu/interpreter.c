@@ -16,11 +16,11 @@ void chip8_intepreter_log_error(chip8_interpreter_t* self, uint16_t opcode)
     chip8_state_log(self->state, stderr);
 }
 
-void chip8_interpreter_update_timers(chip8_interpreter_t* self, double dt)
+void chip8_interpreter_update_timers(chip8_interpreter_t* self, long dt)
 {
     self->timer += dt;
-    int remainder = self->timer / (1.0 / 60);
-    self->timer -= 1.0 * remainder / 60;
+    int remainder = self->timer / 16666666;
+    self->timer -= remainder * 16666666;
     self->state->draw_flag = (remainder > 0) ? true : self->state->draw_flag;
     self->state->dt = (self->state->dt < remainder) ? 0 : (self->state->dt - remainder);
     self->state->st = (self->state->st < remainder) ? 0 : (self->state->st - remainder);
