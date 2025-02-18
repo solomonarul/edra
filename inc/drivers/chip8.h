@@ -12,16 +12,15 @@ struct cchip8_context {
     chip8_state_t state;
     bitset_t display_memory;
     SDL_RWLock* display_lock;
-    uint8_t memory[0x10000];
     uint32_t speed;
     union {
         chip8_interpreter_t interpreter;
     } cpu;
+    uint8_t memory[0x10000];
 };
 typedef struct cchip8_context cchip8_context_t;
 
 void cchip8_init(cchip8_context_t* self);
-void cchip8_run(cchip8_context_t* self);
 void cchip8_step(cchip8_context_t* self, uint32_t update_rate);
 void cchip8_run_sdl(cchip8_context_t* self, ini_file_t* config, bool threaded);
 void cchip8_free(cchip8_context_t* self);

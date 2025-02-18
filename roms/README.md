@@ -9,6 +9,7 @@ I recommend placing all your ROMs here for better organization.
 module=chip8
 
 [chip8.core]
+path=<rom_path>
 threaded=true
 speed=600
 input=sdl

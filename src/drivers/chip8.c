@@ -99,7 +99,7 @@ void cchip8_init(cchip8_context_t* self)
         0xE0, 0x90, 0x90, 0x90, 0xE0, // D
         0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
         0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-    };
+    };  // TODO: make this modifiable from outside?
     memcpy((char*)self->memory, FONTSET, sizeof(uint8_t) * FONTSET_SIZE);
 }
 
@@ -113,7 +113,7 @@ void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
         start_time = thread_get_nanos();
         chip8_interpreter_step(&self->cpu.interpreter);
         end_time = thread_get_nanos();
-        chip8_interpreter_update_timers(&self->cpu.interpreter, end_time - start_time + rand() % 100);   // rand() % 100 is a trick cuz the timer is not accurate enough
+        chip8_interpreter_update_timers(&self->cpu.interpreter, end_time - start_time + rand() % 100);   // rand() % 100 is a trick cuz thread_get_nanos() is not accurate enough.
     }
     else {
         start_time = 0;
@@ -127,8 +127,9 @@ void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
     }
 }
 
-void cchip8_run(cchip8_context_t* self)
+static int cpu_thread_function(void* args)
 {
+    cchip8_context_t* const self = args;
     while(true)
     {
         cchip8_step(self, 75);
@@ -139,11 +140,6 @@ void cchip8_run(cchip8_context_t* self)
         if(!self->cpu.interpreter.running) break;
     }
     fprintf(stderr, "[INFO]: Emulator has stopped.\n");
-}
-
-static int cpu_thread_function(void* args)
-{
-    cchip8_run(args);
     return 0;
 }
 
