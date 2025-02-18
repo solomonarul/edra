@@ -9,20 +9,17 @@ I recommend placing all your ROMs here for better organization.
 module=chip8
 
 [chip8.core]
-threaded=<if_use_multiple_threads_here>
-speed=<speed_number_here>
+threaded=true
+speed=600
 input=sdl
 output=sdl
 
-[chip8.sdl.colors]
-foreground_r=200
-foreground_g=200
-foreground_b=200
-background_r=20
-background_g=20
-background_b=20
+[chip8.input.sdl.keys]
+keys[]=[[X], [1], [2], [3], [Q], [W], [E], [A], [S], [D], [Z], [C], [4], [R], [F], [V]]
 
-[chip8.sdl.keys]
-keys[]=[X, 1, 2, 3, Q, W, E, A, S, D, Z, C, 4, R, F, V]
+[chip8.output.sdl.colors]
+foreground[]=[200, 200, 200]
+background[]=[20, 20, 20]
 ```
+- Make sure that the length of a line is less than 255 characters.
 - Launch the executable with the path to launch.ini as the first argument.

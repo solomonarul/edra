@@ -8,4 +8,10 @@
  */
 void string_concat(char* const dest, char* const first, char* const second);
 
+/*
+ *  Strips whitespaces from before and after the string.
+ *  This returns the pointer to the string after the operations. Please note that this doesn't reallocate memory, it just moves pointers around.
+ */
+char* string_strip(char* const src);
+
 #endif

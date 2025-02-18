@@ -14,10 +14,18 @@
 - app, which is the GUI, written with SDL3.
 
 ## TODO / nice to haves:
+- [x] Single threaded variant.
 - [ ] Generalized error handling.
-- [ ] INI parsing for configs.
+- [x] INI parsing for configs.
 - [ ] 1.0 release on Github repo.
 - [ ] CHIP8 variants / "quirks".
-- [ ] Single threaded variant.
 - [ ] Multiple frontends other than SDL (vanilla CHIP8 fits nicely in the terminal) (SDL_Thread will be kept for threads, I love SDL_Thread).
 - [ ] Try as much as possible to avoid the heap and keep data inside the CHIP8 struct.
+- [ ] CHIP8 Database support?? (JSON: https://github.com/chip-8/chip-8-database, maybe convert to our ini format?)
+
+---
+
+<a href="https://brainmade.org/">
+    Made with <3 by a human.
+    <img src="https://brainmade.org/88x31-light.png" align="right">
+</a>

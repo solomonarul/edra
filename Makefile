@@ -13,7 +13,7 @@ bwr:
 	@cmake -E copy build/release/app.exe bin/release/app.exe
 
 rwr: bwr
-	@./bin/release/app.exe ./roms/launch.ini
+	@./bin/release/app.exe roms/launch.ini
 
 bwd:
 	@cmake -E make_directory build
@@ -27,7 +27,7 @@ bwd:
 	@cmake -E copy build/debug/app.exe bin/debug/app.exe
 
 rwd: bwd
-	@./bin/debug/app.exe ./roms/launch.ini
+	@./bin/debug/app.exe roms/launch.ini
 
 t:
 	@./bin/debug/test/auxum_test.exe

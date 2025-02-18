@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <auxum/ini.h>
 #include <auxum/unused.h>
 #include <auxum/thread.h>
 #include <auxum/strings.h>
@@ -36,16 +37,26 @@ bool get_key_status(void* arg, uint8_t key)
 
 int main(int argc, char* argv[])
 {
-    UNUSED(argc); UNUSED(argv);
+    // No config, cry.
+    if(argc < 2) {
+        fprintf(stderr, "[EROR]: No INI file specified!\n");
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "No INI file specified!\n", NULL);
+        return -1;
+    }
+
+    // Parse the config.
+    FILE* input = fopen(argv[1], "r");
+    ini_file_t config = ini_file_parse(input);
+    fclose(input);
     
     // Init the emulator.
     cchip8_context_t emulator;
     cchip8_init(&emulator);
-    emulator.speed = 600;
+    emulator.speed = ini_data_get_as_int(ini_file_get_data(&config, "chip8.core", "speed"));
     emulator.state.get_key_status = get_key_status;
 
     // Load the ROM.
-    const char* rom_path = "roms/chip8/raus/oob_test_7.ch8";
+    char* const rom_path = ini_data_get_as_string(ini_file_get_data(&config, "chip8.core", "path"));
     FILE* rom = fopen(rom_path, "rb");
     if(rom == NULL)
     {
