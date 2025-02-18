@@ -294,6 +294,7 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
             // Key has been pressed already, wait for release.
             else if(!state->get_key_status(state->aux_arg, state->last_key))
             {
+                state->v[X] = state->last_key;
                 state->last_key = 0x10;
                 state->pc += 2;
             }

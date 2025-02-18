@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     emulator.state.get_key_status = get_key_status;
 
     // Load the ROM.
-    const char* rom_path = "roms/chip8/timendus/4.2/1-chip8-logo.ch8";
+    const char* rom_path = "roms/chip8/raus/oob_test_7.ch8";
     FILE* rom = fopen(rom_path, "rb");
     if(rom == NULL)
     {
