@@ -102,32 +102,38 @@ void cchip8_init(cchip8_context_t* self)
     memcpy((char*)self->memory, FONTSET, sizeof(uint8_t) * FONTSET_SIZE);
 }
 
-void cchip8_run(cchip8_context_t* self)
+void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
 {
     long start_time, end_time;
-    long timer;
+    if(self->speed == (uint32_t)-1)
+    {
+        start_time = thread_get_nanos();
+        chip8_interpreter_step(&self->cpu.interpreter);
+        end_time = thread_get_nanos();
+        chip8_interpreter_update_timers(&self->cpu.interpreter, end_time - start_time + rand() % 100);   // rand() % 100 is a trick cuz the timer is not accurate enough
+    }
+    else {
+        start_time = 0;
+        while(start_time < SDL_NS_PER_SECOND / update_rate)
+        {
+            chip8_interpreter_step(&self->cpu.interpreter);
+            chip8_interpreter_update_timers(&self->cpu.interpreter, SDL_NS_PER_SECOND / self->speed);
+            if(!self->cpu.interpreter.running) break;
+            start_time += SDL_NS_PER_SECOND / self->speed;
+        }
+    }
+}
+
+void cchip8_run(cchip8_context_t* self)
+{
     while(true)
     {
-        if(self->speed == (uint32_t)-1)
-        {
-            start_time = thread_get_nanos();
-            chip8_interpreter_step(&self->cpu.interpreter);
-            end_time = thread_get_nanos();
-            chip8_interpreter_update_timers(&self->cpu.interpreter, end_time - start_time + rand() % 100);   // rand() % 100 is a trick cuz the timer is not accurate enough
-            if(!self->cpu.interpreter.running) break;
-        }
-        else {
-            timer = 0;
-            while(timer < SDL_NS_PER_SECOND / 75)
-            {
-                chip8_interpreter_step(&self->cpu.interpreter);
-                chip8_interpreter_update_timers(&self->cpu.interpreter, SDL_NS_PER_SECOND / self->speed);
-                if(!self->cpu.interpreter.running) break;
-                timer += SDL_NS_PER_SECOND / self->speed;
-            }
-            if(!self->cpu.interpreter.running) break;
+        cchip8_step(self, 75);
+
+        if(self->speed != (uint32_t)-1)
             thread_sleep(SDL_NS_PER_SECOND / 75);
-        }
+
+        if(!self->cpu.interpreter.running) break;
     }
     fprintf(stderr, "[INFO]: Emulator has stopped.\n");
 }

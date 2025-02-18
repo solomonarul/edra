@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     emulator.state.get_key_status = get_key_status;
 
     // Load the ROM.
-    const char* rom_path = "roms/chip8/games/snake.ch8";
+    const char* rom_path = "roms/chip8/demos/chipquarium.ch8";
     FILE* rom = fopen(rom_path, "rb");
     if(rom == NULL)
     {
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
     SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     // Create CPU thread.
-    SDL_Thread* cpu_thread = SDL_CreateThread(cpu_thread_function, "c8 cpu thr", &emulator);
+    /*SDL_Thread* cpu_thread = SDL_CreateThread(cpu_thread_function, "c8 cpu thr", &emulator);
     if(cpu_thread == NULL)
     {
         cchip8_free(&emulator);
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         return -1;
-    }
+    }*/
 
     // Main loop.
     SDL_Event event;
@@ -114,23 +114,25 @@ int main(int argc, char* argv[])
             }
         }
 
+        cchip8_step(&emulator, 60);
+
         SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
         SDL_RenderClear(renderer);
 
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
         
-        SDL_LockRWLockForReading(emulator.display_lock);
+        //SDL_LockRWLockForReading(emulator.display_lock);
         for(uint8_t x = 0; x < 64; x++)
             for(uint8_t y = 0; y < 32; y++)
                 if(bitset_get(&emulator.display_memory, x + y * 64))
                     SDL_RenderPoint(renderer, x, y);
-        SDL_UnlockRWLock(emulator.display_lock);
+        //SDL_UnlockRWLock(emulator.display_lock);
         SDL_RenderPresent(renderer);
         thread_sleep(SDL_NS_PER_SECOND / 60);
     }
 
-    emulator.cpu.interpreter.running = false;
-    SDL_WaitThread(cpu_thread, NULL);
+    /*emulator.cpu.interpreter.running = false;
+    SDL_WaitThread(cpu_thread, NULL);*/
 
     cchip8_free(&emulator);
     SDL_DestroyRenderer(renderer);
