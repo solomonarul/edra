@@ -104,6 +104,8 @@ void cchip8_init(cchip8_context_t* self)
 
 void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
 {
+    if(!self->cpu.interpreter.running) return;
+
     long start_time, end_time;
     if(self->speed == (uint32_t)-1)
     {
@@ -118,7 +120,7 @@ void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
         {
             chip8_interpreter_step(&self->cpu.interpreter);
             chip8_interpreter_update_timers(&self->cpu.interpreter, SDL_NS_PER_SECOND / self->speed);
-            if(!self->cpu.interpreter.running) break;
+            if(!self->cpu.interpreter.running) return;
             start_time += SDL_NS_PER_SECOND / self->speed;
         }
     }

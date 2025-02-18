@@ -31,7 +31,6 @@ bool get_key_status(void* arg, uint8_t key)
     static int keyboard_state_length;
     static const bool* keyboard_state;
     keyboard_state = SDL_GetKeyboardState(&keyboard_state_length);
-    assert(key < 0x10);
     return keyboard_state[keys[key]];
 }
 
@@ -46,7 +45,7 @@ int main(int argc, char* argv[])
     emulator.state.get_key_status = get_key_status;
 
     // Load the ROM.
-    const char* rom_path = "roms/chip8/demos/chipquarium.ch8";
+    const char* rom_path = "roms/chip8/timendus/4.2/1-chip8-logo.ch8";
     FILE* rom = fopen(rom_path, "rb");
     if(rom == NULL)
     {

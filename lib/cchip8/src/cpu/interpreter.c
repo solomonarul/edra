@@ -254,13 +254,13 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
         // SKKP Vx
         case 0x9E:
             assert(state->get_key_status);
-            state->pc += 2 + (state->get_key_status(state->aux_arg, state->v[X])) * 2;
+            state->pc += 2 + (state->get_key_status(state->aux_arg, state->v[X] & 0xF)) * 2;
             break;
 
         // SKNP Vx
         case 0xA1:
             assert(state->get_key_status);
-            state->pc += 2 + !(state->get_key_status(state->aux_arg, state->v[X])) * 2;
+            state->pc += 2 + !(state->get_key_status(state->aux_arg, state->v[X] & 0xF)) * 2;
             break;
 
         default:
@@ -319,7 +319,7 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
 
         // SPRT Vx
         case 0x29:
-            state->i = 5 * state->v[X];
+            state->i = 5 * (state->v[X] & 0xF);
             state->pc += 2;
             break;
 
