@@ -1,5 +1,6 @@
 #include "drivers/chip8.h"
 #include <auxum/unused.h>
+#include <auxum/strings.h>
 #include <auxum/thread.h>
 #include <SDL3/SDL.h>
 #include <assert.h>
@@ -138,6 +139,117 @@ void cchip8_run(cchip8_context_t* self)
         if(!self->cpu.interpreter.running) break;
     }
     fprintf(stderr, "[INFO]: Emulator has stopped.\n");
+}
+
+static int cpu_thread_function(void* args)
+{
+    cchip8_run(args);
+    return 0;
+}
+
+void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config, bool threaded)
+{
+    // Init SDL subsystem.
+    if(!SDL_Init(SDL_INIT_VIDEO))
+    {
+        cchip8_free(self);
+        fprintf(stderr, "[EROR]: Could not initialize SDL! %s\n", SDL_GetError());
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not initialize SDL3!", NULL);
+        return;
+    }
+    char* const rom_path = ini_data_get_as_string(ini_file_get_data(config, "chip8.core", "path"));
+    const char* app_title = "cchip8 | ";
+    char window_title[strlen(rom_path) + strlen(app_title) + 1];
+    string_concat((char* const)window_title, (char* const)app_title, (char* const)rom_path);
+    SDL_Window* window = SDL_CreateWindow(window_title, 960, 540, SDL_WINDOW_RESIZABLE);
+    if(window == NULL)
+    {
+        cchip8_free(self);
+        fprintf(stderr, "[EROR]: Could not create SDL3 window! %s\n", SDL_GetError());
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not create SDL3 window!", NULL);
+        return;
+    }
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
+    if(renderer == NULL)
+    {
+        cchip8_free(self);
+        fprintf(stderr, "[EROR]: Could not create SDL3 renderer! %s\n", SDL_GetError());
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not create SDL3 renderer!", window);
+        SDL_DestroyWindow(window);
+        return;
+    }
+    SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    // Create CPU thread.
+    SDL_Thread* cpu_thread;
+    if(threaded)
+    {
+        cpu_thread = SDL_CreateThread(cpu_thread_function, "c8 cpu thr", self);
+        if(cpu_thread == NULL)
+        {
+            cchip8_free(self);
+            fprintf(stderr, "[EROR]: Could not create emulator thread!\n");
+            SDL_DestroyRenderer(renderer);
+            SDL_DestroyWindow(window);
+            return;
+        }
+    }
+
+    // Main loop.
+    SDL_Event event;
+    bool app_running = true;
+    ini_data_t* const foreground_array = ini_file_get_data(config, "chip8.output.sdl.colors", "foreground");
+    ini_data_t* const background_array = ini_file_get_data(config, "chip8.output.sdl.colors", "background");
+    struct SDL_Color foreground, background;
+    foreground.r = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 0));
+    foreground.g = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 1));
+    foreground.b = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 2));
+    background.r = ini_data_get_as_int(ini_data_get_from_array(background_array, 0));
+    background.g = ini_data_get_as_int(ini_data_get_from_array(background_array, 1));
+    background.b = ini_data_get_as_int(ini_data_get_from_array(background_array, 2));
+
+    while(app_running)  // No need to sync here, running one frame more than the CPU can't hurt.
+    {
+        while(SDL_PollEvent(&event))
+        {
+            switch(event.type)
+            {
+            case SDL_EVENT_QUIT:
+                app_running = false;
+                break;
+            }
+        }
+
+        if(!threaded)
+            cchip8_step(self, 60);
+
+        SDL_SetRenderDrawColor(renderer, background.r, background.g, background.b, 255);
+        SDL_RenderClear(renderer);
+
+        SDL_SetRenderDrawColor(renderer, foreground.r, foreground.g, foreground.b, 255);
+        
+        if(threaded)
+            SDL_LockRWLockForReading(self->display_lock);
+        for(uint8_t x = 0; x < 64; x++)
+            for(uint8_t y = 0; y < 32; y++)
+                if(bitset_get(&self->display_memory, x + y * 64))
+                    SDL_RenderPoint(renderer, x, y);
+        if(threaded)
+            SDL_UnlockRWLock(self->display_lock);
+        SDL_RenderPresent(renderer);
+        thread_sleep(SDL_NS_PER_SECOND / 60);
+    }
+
+    if(threaded)
+    {
+        self->cpu.interpreter.running = false;
+        SDL_WaitThread(cpu_thread, NULL); 
+    }
+
+    cchip8_free(self);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
 }
 
 void cchip8_free(cchip8_context_t* self)

@@ -196,6 +196,13 @@ ini_data_t* ini_section_get_data(ini_section_t* self, char* const key)
     return NULL;
 }
 
+ini_data_t* ini_data_get_from_array(ini_data_t* self, uint32_t index)
+{
+    assert(self->type == ARRAY);
+    assert(self->data.array.size > index);
+    return (ini_data_t*)dynarray_get(self->data.array, index);
+}
+
 char* ini_data_get_as_string(ini_data_t* self)
 {
     assert(self->type == VALUE);
@@ -206,4 +213,10 @@ int ini_data_get_as_int(ini_data_t* self)
 {
     assert(self->type == VALUE);
     return atoi(self->data.string);
+}
+
+bool ini_data_get_as_bool(ini_data_t* self)
+{
+    assert(self->type == VALUE);
+    return strcmp(self->data.string, "true") == 0;
 }

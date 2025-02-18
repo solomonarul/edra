@@ -336,7 +336,7 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
         case 0x55:
             for(uint8_t index = 0; index <= X; index++)
                 state->write_b(state->aux_arg, state->i + index, state->v[index]);
-            state->i += X + 1;  // NOTE: only in vanilla CHIP8. Check quirks test,
+            state->i += X + 1;  // NOTE: only in vanilla CHIP8. Check quirks test.
             state->pc += 2;
             break;
 

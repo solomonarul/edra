@@ -46,7 +46,9 @@ void ini_file_free(ini_file_t* self);
 ini_section_t* ini_file_get_section(ini_file_t* self, char* const key);
 ini_data_t* ini_file_get_data(ini_file_t* self, char* const section, char* const key);
 ini_data_t* ini_section_get_data(ini_section_t* self, char* const key);
+ini_data_t* ini_data_get_from_array(ini_data_t* self, uint32_t index);
 char* ini_data_get_as_string(ini_data_t* self);
 int ini_data_get_as_int(ini_data_t* self);
+bool ini_data_get_as_bool(ini_data_t* self);
 
 #endif
