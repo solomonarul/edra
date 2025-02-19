@@ -1,5 +1,5 @@
-#include "ini.h"
-#include <auxum/strings.h>
+#include "file/ini.h"
+#include <auxum/std/strings.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -8,6 +8,7 @@
 static void ini_array_parse(ini_data_t* self, char* line)
 {
     self->type = ARRAY;
+    bool has_inner_array = strchr(line + 1, '[');
     dynarray_init(&self->data.array, sizeof(ini_data_t), 0);
     line++;
     int length = strlen(line);
@@ -16,7 +17,8 @@ static void ini_array_parse(ini_data_t* self, char* line)
     {
         line = string_strip(line);
         char* end = line;
-        while(*end != '\0' && *end != ',') end++;
+        int bracketcount = 1;
+        while(*end != '\0' && ((!(*end == ',' && bracketcount == 0) && has_inner_array) || (*end != ',' && !has_inner_array))) end++, bracketcount += (*end == '[') - (*end == ']');
         *end = '\0';
         length = strlen(line);
         if(length == 0) break;
@@ -194,6 +196,12 @@ ini_data_t* ini_section_get_data(ini_section_t* self, char* const key)
             return &value->value;
     }
     return NULL;
+}
+
+int ini_data_get_array_size(ini_data_t* self)
+{
+    assert(self->type == ARRAY);
+    return self->data.array.size;
 }
 
 ini_data_t* ini_data_get_from_array(ini_data_t* self, uint32_t index)

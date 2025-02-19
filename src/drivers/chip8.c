@@ -1,7 +1,6 @@
 #include "drivers/chip8.h"
-#include <auxum/unused.h>
-#include <auxum/strings.h>
-#include <auxum/thread.h>
+#include <auxum/std.h>
+#include <auxum/os/thread.h>
 #include <SDL3/SDL.h>
 #include <assert.h>
 #include <threads.h>
@@ -143,8 +142,33 @@ static int cpu_thread_function(void* args)
     return 0;
 }
 
+bool cchip8_sdl_get_key_status(void* args, uint8_t key)
+{
+    cchip8_context_t* const self = args;
+    static const bool* keyboard_state;
+    keyboard_state = SDL_GetKeyboardState(NULL);
+    for(uint32_t index = 0; index < self->key_mappings[key].size; index++)
+        if(keyboard_state[*(SDL_Scancode*)dynarray_get(self->key_mappings[key], index)])
+            return true;
+    return false;
+}
+
 void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config, bool threaded)
 {
+    // Convert the key mappings to SDL keys.
+    ini_data_t* input_section = ini_file_get_data(config, "chip8.input.sdl.input", "keys");
+    for(uint32_t index = 0; index < 0x10; index++)
+    {
+        dynarray_init(&self->key_mappings[index], sizeof(SDL_Scancode), 0);
+        ini_data_t* key_array = ini_data_get_from_array(input_section, index);
+        for(int index_key = 0; index_key < ini_data_get_array_size(key_array); index_key++)
+        {
+            char* const key = ini_data_get_as_string(ini_data_get_from_array(key_array, index_key));
+            SDL_Scancode code = SDL_GetScancodeFromKey(SDL_GetKeyFromName(key), NULL);
+            dynarray_push_back(&self->key_mappings[index], &code);
+        }
+    }
+
     // Init SDL subsystem.
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
@@ -194,8 +218,8 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config, bool threaded)
     // Main loop.
     SDL_Event event;
     bool app_running = true;
-    ini_data_t* const foreground_array = ini_file_get_data(config, "chip8.output.sdl.colors", "foreground");
-    ini_data_t* const background_array = ini_file_get_data(config, "chip8.output.sdl.colors", "background");
+    ini_data_t* const foreground_array = ini_file_get_data(config, "chip8.output.sdl.output", "foreground");
+    ini_data_t* const background_array = ini_file_get_data(config, "chip8.output.sdl.output", "background");
     struct SDL_Color foreground, background;
     foreground.r = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 0));
     foreground.g = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 1));

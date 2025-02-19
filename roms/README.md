@@ -15,10 +15,10 @@ speed=600
 input=sdl
 output=sdl
 
-[chip8.input.sdl.keys]
+[chip8.input.sdl.input]
 keys[]=[[X], [1], [2], [3], [Q], [W], [E], [A], [S], [D], [Z], [C], [4], [R], [F], [V]]
 
-[chip8.output.sdl.colors]
+[chip8.output.sdl.output]
 foreground[]=[200, 200, 200]
 background[]=[20, 20, 20]
 ```

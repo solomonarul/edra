@@ -1,4 +1,4 @@
-#include "thread.h"
+#include "os/thread.h"
 #include <SDL3/SDL.h>
 
 uint64_t thread_get_nanos(void)

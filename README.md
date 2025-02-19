@@ -22,7 +22,7 @@
 - [ ] Multiple frontends other than SDL (vanilla CHIP8 fits nicely in the terminal) (SDL_Thread will be kept for threads, I love SDL_Thread).
 - [ ] Try as much as possible to avoid the heap and keep data inside the CHIP8 struct.
 - [ ] Custom font support?
-- [ ] Fix multithreaded and -1 speed combo resulting in 60ips.
+- [ ] Fix multithreaded and -1 speed combo resulting in 60ips (I don't think there is any fix to that?).
 - [ ] Reduce overhead to get more MIPS.
 - [ ] CHIP8 Database support?? (JSON: https://github.com/chip-8/chip-8-database, maybe convert to our ini format?)
 

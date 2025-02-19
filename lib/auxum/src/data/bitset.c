@@ -1,4 +1,4 @@
-#include "bitset.h"
+#include "data/bitset.h"
 
 #include <assert.h>
 #include <stdlib.h>

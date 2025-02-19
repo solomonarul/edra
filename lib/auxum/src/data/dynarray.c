@@ -1,4 +1,4 @@
-#include "dynarray.h"
+#include "data/dynarray.h"
 
 #include <stdlib.h>
 #include <string.h>
