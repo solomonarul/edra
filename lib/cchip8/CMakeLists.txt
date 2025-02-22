@@ -33,7 +33,11 @@ target_include_directories(
         "inc/cchip8"
 )
 
+if(CMAKE_BUILD_PLATFORM MATCHES "WINDOWS")
 find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
+else()
+find_package(SDL3 REQUIRED)
+endif()
 target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC

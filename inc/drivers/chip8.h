@@ -22,9 +22,10 @@ struct cchip8_context {
 typedef struct cchip8_context cchip8_context_t;
 
 bool cchip8_sdl_get_key_status(void* arg, uint8_t key);
+maybe_t cchip8_run_from_ini(ini_file_t* config);
 void cchip8_init(cchip8_context_t* self);
 void cchip8_step(cchip8_context_t* self, uint32_t update_rate);
-void cchip8_run_sdl(cchip8_context_t* self, ini_file_t* config, bool threaded);
+void cchip8_run_sdl(cchip8_context_t* self, ini_file_t* config);
 void cchip8_free(cchip8_context_t* self);
 
 #endif

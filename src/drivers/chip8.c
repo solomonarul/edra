@@ -1,7 +1,10 @@
 #include "drivers/chip8.h"
+#include "SDL3/SDL_scancode.h"
+#include "auxum/file/ini.h"
 #include <auxum/std.h>
 #include <auxum/os/thread.h>
 #include <SDL3/SDL.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <threads.h>
 
@@ -26,7 +29,9 @@ void memory_write_b(void* arg, uint16_t address, uint8_t value)
 void clear_screen(void* arg)
 {
     cchip8_context_t* const self = arg;
+    SDL_LockRWLockForWriting(self->display_lock);
     bitset_clear(&self->display_memory);
+    SDL_UnlockRWLock(self->display_lock);
 }
 
 bool draw_sprite(void* arg, uint16_t address, uint8_t x, uint8_t y, uint8_t n)
@@ -81,7 +86,7 @@ void cchip8_init(cchip8_context_t* self)
     self->speed = -1;
 
     const uint8_t FONTSET_SIZE = 80;
-    const static uint8_t FONTSET[80] = { 
+    static const uint8_t FONTSET[80] = { 
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
         0x20, 0x60, 0x20, 0x20, 0x70, // 1
         0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -131,14 +136,17 @@ static int cpu_thread_function(void* args)
     cchip8_context_t* const self = args;
     while(true)
     {
-        cchip8_step(self, 75);
-
         if(self->speed != (uint32_t)-1)
+        {
+            cchip8_step(self, 75);
             thread_sleep(SDL_NS_PER_SECOND / 75);
+        }
+        else
+            cchip8_step(self, SDL_NS_PER_SECOND);
 
         if(!self->cpu.interpreter.running) break;
     }
-    fprintf(stderr, "[INFO]: Emulator has stopped.\n");
+    fprintf(stdout, "[CHP8] Emulator has stopped.\n");
     return 0;
 }
 
@@ -153,39 +161,98 @@ bool cchip8_sdl_get_key_status(void* args, uint8_t key)
     return false;
 }
 
-void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config, bool threaded)
+bool cchip8_none_get_key_status(void* args, uint8_t key)
 {
+    UNUSED(args); UNUSED(key);
+    return false;
+}
+
+void cchip8_run_none(cchip8_context_t *self, ini_file_t *config)
+{
+    fprintf(stdout, "[CHP8] Output: none.\n");
+
+    // Create CPU thread.
+    bool threaded = ini_get_bool(config, "chip8.core", "threaded").result;
+    SDL_Thread* cpu_thread = NULL;
+    if(threaded)
+    {
+        cpu_thread = SDL_CreateThread(cpu_thread_function, "c8 cpu thr", self);
+        if(cpu_thread == NULL)
+        {
+            cchip8_free(self);
+            fprintf(stderr, "[EROR] Could not create emulator thread!\n");
+            return;
+        }
+    }
+
+    // Main loop.
+    bool app_running = true;
+    int count = 100;
+    while(app_running)  // No need to sync here, running one frame more than the CPU can't hurt.
+    {
+        if(!threaded)
+            cchip8_step(self, 60);
+        count--;
+        if(count == 0)
+            break;
+        thread_sleep(SDL_NS_PER_SECOND / 60);
+    }
+
+    if(threaded)
+    {
+        self->cpu.interpreter.running = false;
+        SDL_WaitThread(cpu_thread, NULL); 
+    }
+
+    cchip8_free(self);
+}
+
+void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config)
+{
+    fprintf(stdout, "[CHP8] Output: SDL.\n");
+
     // Convert the key mappings to SDL keys.
+    fprintf(stdout, "[CHP8] SDL keys: ");
     ini_data_t* input_section = ini_file_get_data(config, "chip8.input.sdl.input", "keys");
     for(uint32_t index = 0; index < 0x10; index++)
     {
+        fprintf(stdout, "[");
         dynarray_init(&self->key_mappings[index], sizeof(SDL_Scancode), 0);
         ini_data_t* key_array = ini_data_get_from_array(input_section, index);
         for(int index_key = 0; index_key < ini_data_get_array_size(key_array); index_key++)
         {
-            char* const key = ini_data_get_as_string(ini_data_get_from_array(key_array, index_key));
+            char* const key = ini_data_get_as_string(ini_data_get_from_array(key_array, index_key)).result;
             SDL_Scancode code = SDL_GetScancodeFromKey(SDL_GetKeyFromName(key), NULL);
-            dynarray_push_back(&self->key_mappings[index], &code);
+            if(code != SDL_SCANCODE_UNKNOWN)
+            {
+                fprintf(stdout, "%s", key);
+                dynarray_push_back(&self->key_mappings[index], &code);
+            }
         }
+        if(index != 0xF)
+            fprintf(stdout, "], ");
+        else
+            fprintf(stdout, "]");
     }
+    fprintf(stdout, "\n");
 
     // Init SDL subsystem.
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
         cchip8_free(self);
-        fprintf(stderr, "[EROR]: Could not initialize SDL! %s\n", SDL_GetError());
+        fprintf(stderr, "[EROR] Could not initialize SDL! %s\n", SDL_GetError());
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not initialize SDL3!", NULL);
         return;
     }
-    char* const rom_path = ini_data_get_as_string(ini_file_get_data(config, "chip8.core", "path"));
+    char* const rom_path = ini_data_get_as_string(ini_file_get_data(config, "chip8.core", "path")).result;
     const char* app_title = "cchip8 | ";
     char window_title[strlen(rom_path) + strlen(app_title) + 1];
     string_concat((char* const)window_title, (char* const)app_title, (char* const)rom_path);
-    SDL_Window* window = SDL_CreateWindow(window_title, 960, 540, SDL_WINDOW_RESIZABLE);
+    SDL_Window* window = SDL_CreateWindow(window_title, 640, 320, SDL_WINDOW_RESIZABLE);
     if(window == NULL)
     {
         cchip8_free(self);
-        fprintf(stderr, "[EROR]: Could not create SDL3 window! %s\n", SDL_GetError());
+        fprintf(stderr, "[EROR] Could not create SDL3 window! %s\n", SDL_GetError());
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not create SDL3 window!", NULL);
         return;
     }
@@ -193,7 +260,7 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config, bool threaded)
     if(renderer == NULL)
     {
         cchip8_free(self);
-        fprintf(stderr, "[EROR]: Could not create SDL3 renderer! %s\n", SDL_GetError());
+        fprintf(stderr, "[EROR] Could not create SDL3 renderer! %s\n", SDL_GetError());
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not create SDL3 renderer!", window);
         SDL_DestroyWindow(window);
         return;
@@ -201,33 +268,54 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config, bool threaded)
     SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     // Create CPU thread.
-    SDL_Thread* cpu_thread;
+    bool threaded = ini_get_bool(config, "chip8.core", "threaded").result;
+    SDL_Thread* cpu_thread = NULL;
     if(threaded)
     {
         cpu_thread = SDL_CreateThread(cpu_thread_function, "c8 cpu thr", self);
         if(cpu_thread == NULL)
         {
             cchip8_free(self);
-            fprintf(stderr, "[EROR]: Could not create emulator thread!\n");
+            fprintf(stderr, "[EROR] Could not create emulator thread!\n");
             SDL_DestroyRenderer(renderer);
             SDL_DestroyWindow(window);
             return;
         }
     }
 
-    // Main loop.
-    SDL_Event event;
-    bool app_running = true;
+    // Color parsing.
     ini_data_t* const foreground_array = ini_file_get_data(config, "chip8.output.sdl.output", "foreground");
     ini_data_t* const background_array = ini_file_get_data(config, "chip8.output.sdl.output", "background");
     struct SDL_Color foreground, background;
-    foreground.r = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 0));
-    foreground.g = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 1));
-    foreground.b = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 2));
-    background.r = ini_data_get_as_int(ini_data_get_from_array(background_array, 0));
-    background.g = ini_data_get_as_int(ini_data_get_from_array(background_array, 1));
-    background.b = ini_data_get_as_int(ini_data_get_from_array(background_array, 2));
+    if(ini_data_get_array_size(foreground_array) == 3)
+    {
+        foreground.r = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 0)).result;
+        foreground.g = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 1)).result;
+        foreground.b = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 2)).result;
+    }
+    else {
+        foreground.r = 200;
+        foreground.g = 200;
+        foreground.b = 200;
+    }
+    if(ini_data_get_array_size(background_array) == 3)
+    {
+        background.r = ini_data_get_as_int(ini_data_get_from_array(background_array, 0)).result;
+        background.g = ini_data_get_as_int(ini_data_get_from_array(background_array, 1)).result;
+        background.b = ini_data_get_as_int(ini_data_get_from_array(background_array, 2)).result;
+    }
+    else {
+        background.r = 200;
+        background.g = 200;
+        background.b = 200;
+    }
 
+    fprintf(stdout, "[CHP8] SDL Foreground color: (%d, %d, %d).\n", foreground.r, foreground.g, foreground.b);
+    fprintf(stdout, "[CHP8] SDL Background color: (%d, %d, %d).\n", background.r, background.g, background.b);
+
+    // Main loop.
+    SDL_Event event;
+    bool app_running = true;
     while(app_running)  // No need to sync here, running one frame more than the CPU can't hurt.
     {
         while(SDL_PollEvent(&event))
@@ -270,6 +358,95 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config, bool threaded)
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+static maybe_t cchip8_init_from_ini(cchip8_context_t* self, ini_file_t* config)
+{
+    maybe_t result = {};
+    cchip8_init(self);
+    
+    // Speed parsing.
+    self->speed = RESULT_GET_OR(ini_get_int(config, "chip8.core", "speed"), 600);
+    fprintf(stdout, "[CHP8] Speed: %d ips.\n", self->speed);
+
+    // Input type parsing.
+    ini_string_result_t const input_result = ini_get_string(config, "chip8.core", "input");
+    if(!IS_OK(input_result))
+    {
+        cchip8_free(self);
+        result.ok = false;
+        result.error = "Input type was not specified in the INI file!";
+        return result;
+    }
+    if(strcmp(RESULT_GET_VALUE(input_result), "sdl") == 0)
+    {
+        fprintf(stdout, "[CHP8] Input: SDL.\n");
+        self->state.get_key_status = cchip8_sdl_get_key_status;
+    }
+    else if(strcmp(RESULT_GET_VALUE(input_result), "none") == 0)
+    {
+        fprintf(stdout, "[CHP8] Input: none.\n");
+        self->state.get_key_status = cchip8_none_get_key_status;        
+    }
+    else {
+        result.ok = false;
+        result.error = "Invalid input type specified in the INI file!";
+        return result;
+    }
+
+    // Load the ROM.
+    ini_string_result_t const rom_path_result = ini_get_string(config, "chip8.core", "path");
+    if(!IS_OK(rom_path_result))
+    {
+        cchip8_free(self);
+        result.ok = false;
+        result.error = "CHIP8 ROM path not specified in INI file!";
+        return result;
+    }
+    char* const path = RESULT_GET_VALUE(rom_path_result);
+    FILE* rom = fopen(path, "rb");
+    if(rom == NULL)
+    {
+        cchip8_free(self);
+        result.ok = false;
+        result.error = "Could not load specified ROM file!";
+        return result;
+    }
+    fread((char*)self->memory + self->state.pc, sizeof(uint8_t), 0x10000 - self->state.pc, rom);
+    fclose(rom);
+    fprintf(stdout, "[CHP8] Using ROM at path: %s\n", path);
+
+    result.ok = true;
+    return result;
+}
+
+maybe_t cchip8_run_from_ini(ini_file_t* config)
+{
+    fprintf(stdout, "[INFO] Running CHIP8 emulator from INI file.\n");
+    maybe_t result = {};
+    cchip8_context_t emulator;
+    cchip8_init_from_ini(&emulator, config);
+    
+    // Output type parsing and running.
+    ini_string_result_t const output_result = ini_get_string(config, "chip8.core", "output");
+    if(!IS_OK(output_result))
+    {
+        cchip8_free(&emulator);
+        result.ok = false;
+        result.error = "Output type was not specified in the INI file!";
+        return result;
+    }
+    if(strcmp(RESULT_GET_VALUE(output_result), "sdl") == 0)
+        cchip8_run_sdl(&emulator, config);
+    else if(strcmp(RESULT_GET_VALUE(output_result), "none") == 0)
+        cchip8_run_none(&emulator, config);
+    else {
+        result.ok = false;
+        result.error = "Invalid output type specified in the INI file!";
+        return result;
+    }
+    result.ok = true;
+    return result;
 }
 
 void cchip8_free(cchip8_context_t* self)

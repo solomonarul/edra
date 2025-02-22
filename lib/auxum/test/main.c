@@ -1,4 +1,4 @@
-#include <auxum/strings.h>
+#include <auxum/std.h>
 
 #define UNUSED(X) ((void)(X))
 

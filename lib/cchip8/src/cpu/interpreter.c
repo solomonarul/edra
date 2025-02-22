@@ -12,7 +12,7 @@ void chip8_interpreter_init(chip8_interpreter_t* self)
 void chip8_intepreter_log_error(chip8_interpreter_t* self, uint16_t opcode)
 {
     self->running = false;
-    fprintf(stderr, "[EROR]: Unknown opcode %04X found at PC %04X!\n", opcode, self->state->pc);
+    fprintf(stderr, "[EROR] Unknown opcode %04X found at PC %04X!\n", opcode, self->state->pc);
     chip8_state_log(self->state, stderr);
 }
 
@@ -71,7 +71,7 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
         if(state->pc == ONNN)
         {
             self->running = false;
-            fprintf(stderr, "[WARN]: Infinite jump found at PC %04X!\n", state->pc);
+            fprintf(stdout, "[CHP8] [WARN] Infinite jump found at PC %04X!\n", state->pc);
         }
         state->pc = ONNN;
         break;
@@ -172,7 +172,7 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
         // SHR Vx, Vy
         case 0x6:
         {
-            const uint8_t flag = state->v[X] & 0b1;
+            const uint8_t flag = state->v[X] & 1;
             state->v[X] = state->v[Y] >> 1;
             state->v[0xF] = flag;
             state->pc += 2; 
@@ -192,7 +192,7 @@ void chip8_interpreter_step(chip8_interpreter_t* self)
         // SHL Vx, Vy
         case 0xE:
         {
-            const uint8_t flag = state->v[X] & 0b10000000;
+            const uint8_t flag = state->v[X] & (1 << 7);
             state->v[X] = state->v[Y] << 1;
             state->v[0xF] = flag >> 7;
             state->pc += 2; 

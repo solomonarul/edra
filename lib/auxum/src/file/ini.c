@@ -1,13 +1,18 @@
 #include "file/ini.h"
-#include <auxum/std/strings.h>
+#include <auxum/std.h>
+#include <SDL3/SDL.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
 
+static char* const INI_ERROR_INVALID_DATA = "INI data is invalid!";
+static char* const INI_ERROR_NOT_VALUE = "INI data is not a value!";
+static char* const INI_ERROR_NOT_INT = "INI data is not a valid number!";
+
 static void ini_array_parse(ini_data_t* self, char* line)
 {
-    self->type = ARRAY;
+    self->type = INI_DATA_ARRAY;
     bool has_inner_array = strchr(line + 1, '[');
     dynarray_init(&self->data.array, sizeof(ini_data_t), 0);
     line++;
@@ -27,12 +32,28 @@ static void ini_array_parse(ini_data_t* self, char* line)
             ini_array_parse(&other, line);
         else
         {
-            other.type = VALUE;
-            other.data.string = _strdup(line);
+            other.type = INI_DATA_VALUE;
+            other.data.string = SDL_strdup(line);
         }
         dynarray_push_back(&self->data.array, &other);
         line = end + 1;
     }
+}
+
+ini_file_result_t ini_file_read(char* const path)
+{
+    ini_file_result_t result = {};
+    FILE* input = fopen(path, "r");
+    if(input == NULL)
+    {
+        result.ok = false;
+        result.error = "INI file doesn't exist!";
+        return result;
+    }
+    result.ok = true;
+    result.result = ini_file_parse(input);
+    fclose(input);
+    return result;
 }
 
 ini_file_t ini_file_parse(FILE* file)
@@ -58,7 +79,7 @@ ini_file_t ini_file_parse(FILE* file)
         {
             ini_section_t new_section;
             line[length - 1] = '\0';
-            new_section.key = _strdup(line + 1);
+            new_section.key = SDL_strdup(line + 1);
             dynarray_init(&new_section.values, sizeof(ini_value_t), 0);
             current_section = dynarray_push_back(&result.sections, &new_section);
         }
@@ -71,17 +92,16 @@ ini_file_t ini_file_parse(FILE* file)
                 second_part = string_strip(second_part);
                 length = strlen(line);
                 ini_value_t new_value;
-                new_value.key = _strdup(line);
                 if(line[length - 1] == ']' && line[length - 2] == '[')  // This is an array.
                 {
                     line[length - 2] = '\0';
-                    new_value.key = _strdup(line);
+                    new_value.key = SDL_strdup(line);
                     ini_array_parse(&new_value.value, second_part);
                 }
                 else {                                                  // This is a normal key=value.
-                    new_value.key = _strdup(line);
-                    new_value.value.type = VALUE;
-                    new_value.value.data.string = _strdup(second_part);
+                    new_value.key = SDL_strdup(line);
+                    new_value.value.type = INI_DATA_VALUE;
+                    new_value.value.data.string = SDL_strdup(second_part);
                 }
                 dynarray_push_back(&current_section->values, &new_value);
             }
@@ -93,7 +113,7 @@ ini_file_t ini_file_parse(FILE* file)
 
 static void ini_data_print(ini_data_t* self, FILE* file)
 {
-    if(self->type == VALUE)
+    if(self->type == INI_DATA_VALUE)
         fprintf(file, "%s", self->data.string);
     else
     {
@@ -121,7 +141,7 @@ void ini_file_print(ini_file_t* self, FILE* file)
         for(uint32_t index_section = 0; index_section < current_section->values.size; index_section++)
         {
             current_value = dynarray_get(current_section->values, index_section);
-            if(current_value->value.type == ARRAY)
+            if(current_value->value.type == INI_DATA_ARRAY)
                 fprintf(file, "%s[]=", current_value->key);
             else
                 fprintf(file, "%s=", current_value->key);
@@ -136,11 +156,11 @@ static void ini_data_free(void* data)
     ini_data_t* const self = (ini_data_t*) data;
     switch(self->type)
     {
-    case ARRAY:
+    case INI_DATA_ARRAY:
         self->data.array.free_callback = ini_data_free;
         dynarray_free(self->data.array);
         break;
-    case VALUE:
+    case INI_DATA_VALUE:
         free(self->data.string);
         break;
     default:
@@ -183,7 +203,8 @@ ini_section_t* ini_file_get_section(ini_file_t* self, char* const key)
 ini_data_t* ini_file_get_data(ini_file_t* self, char* const section, char* const key)
 {
     ini_section_t* section_data = ini_file_get_section(self, section);
-    assert(section_data != NULL);
+    if(section_data == NULL)
+        return NULL;
     return ini_section_get_data(section_data, key);
 }
 
@@ -200,31 +221,83 @@ ini_data_t* ini_section_get_data(ini_section_t* self, char* const key)
 
 int ini_data_get_array_size(ini_data_t* self)
 {
-    assert(self->type == ARRAY);
+    if(self == NULL)
+        return 0;
+    assert(self->type == INI_DATA_ARRAY);
     return self->data.array.size;
 }
 
 ini_data_t* ini_data_get_from_array(ini_data_t* self, uint32_t index)
 {
-    assert(self->type == ARRAY);
-    assert(self->data.array.size > index);
+    if(self == NULL)
+        return NULL;
+    assert(self->type == INI_DATA_ARRAY);
+    if(self->data.array.size <= index)
+        return NULL;
     return (ini_data_t*)dynarray_get(self->data.array, index);
 }
 
-char* ini_data_get_as_string(ini_data_t* self)
+ini_string_result_t ini_data_get_as_string(ini_data_t* self)
 {
-    assert(self->type == VALUE);
-    return self->data.string;
+    ini_string_result_t result = {};
+    if(self == NULL)
+    {
+        result.ok = false;
+        result.error = INI_ERROR_INVALID_DATA;
+        return result;
+    }
+    if(self->type != INI_DATA_VALUE)
+    {
+        result.ok = false;
+        result.error = INI_ERROR_NOT_VALUE;
+        return result;
+    }
+    result.ok = true;
+    result.result = self->data.string;
+    return result;
 }
 
-int ini_data_get_as_int(ini_data_t* self)
+ini_int_result_t ini_data_get_as_int(ini_data_t* self)
 {
-    assert(self->type == VALUE);
-    return atoi(self->data.string);
+    ini_int_result_t result = {};
+    if(self == NULL)
+    {
+        result.ok = false;
+        result.error = INI_ERROR_INVALID_DATA;
+        return result;
+    }
+    if(self->type != INI_DATA_VALUE)
+    {
+        result.ok = false;
+        result.error = INI_ERROR_NOT_VALUE;
+        return result;
+    }
+    result.ok = true;
+    char* p;
+    result.result = strtol(self->data.string, &p, 10);
+    if(p == self->data.string) { // Sequence is not a valid number.
+        result.ok = false;
+        result.error = INI_ERROR_NOT_INT;
+    }
+    return result;
 }
 
-bool ini_data_get_as_bool(ini_data_t* self)
+ini_bool_result_t ini_data_get_as_bool(ini_data_t* self)
 {
-    assert(self->type == VALUE);
-    return strcmp(self->data.string, "true") == 0;
+    ini_bool_result_t result = {};
+    if(self == NULL)
+    {
+        result.ok = false;
+        result.error = INI_ERROR_INVALID_DATA;
+        return result;
+    }
+    if(self->type != INI_DATA_VALUE)
+    {
+        result.ok = false;
+        result.error = INI_ERROR_NOT_VALUE;
+        return result;
+    }
+    result.ok = true;
+    result.result = (strcmp(self->data.string, "true") == 0);
+    return result;
 }

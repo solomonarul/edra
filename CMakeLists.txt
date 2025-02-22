@@ -38,7 +38,11 @@ target_compile_definitions(
         BUILD_TYPE_${CMAKE_BUILD_PLATFORM}
 )
 
+if(CMAKE_BUILD_PLATFORM MATCHES "WINDOWS")
 find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
+else()
+find_package(SDL3 REQUIRED)
+endif()
 target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC
