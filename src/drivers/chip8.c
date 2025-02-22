@@ -1,12 +1,9 @@
 #include "drivers/chip8.h"
-#include "SDL3/SDL_scancode.h"
-#include "auxum/file/ini.h"
 #include <auxum/std.h>
 #include <auxum/os/thread.h>
 #include <SDL3/SDL.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <threads.h>
 
 uint8_t memory_read_b(void* arg, uint16_t address)
 {

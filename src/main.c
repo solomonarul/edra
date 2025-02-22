@@ -1,4 +1,3 @@
-#include "auxum/std/error.h"
 #include <auxum/std.h>
 #include <auxum/file/ini.h>
 #include <drivers/chip8.h>
