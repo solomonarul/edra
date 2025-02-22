@@ -178,7 +178,7 @@ void cchip8_run_none(cchip8_context_t *self, ini_file_t *config)
     fprintf(stdout, "[CHP8] Output: none.\n");
 
     // Create CPU thread.
-    bool threaded = ini_get_bool(config, "chip8.core", "threaded").result;
+    bool threaded = RESULT_GET_OR(ini_get_bool(config, "chip8.core", "threaded"), false);
     SDL_Thread* cpu_thread = NULL;
     if(threaded)
     {
@@ -270,7 +270,7 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config)
     SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     // Create CPU thread.
-    bool threaded = ini_get_bool(config, "chip8.core", "threaded").result;
+    bool threaded = RESULT_GET_OR(ini_get_bool(config, "chip8.core", "threaded"), false);
     SDL_Thread* cpu_thread = NULL;
     if(threaded)
     {
@@ -380,12 +380,13 @@ static maybe_t cchip8_init_from_ini(cchip8_context_t* self, ini_file_t* config)
         result.error = "Input type was not specified in the INI file!";
         return result;
     }
-    if(strcmp(RESULT_GET_VALUE(input_result), "sdl") == 0)
+    char* const input = RESULT_GET_VALUE(input_result);
+    if(strcmp(input, "sdl") == 0)
     {
         fprintf(stdout, "[CHP8] Input: SDL.\n");
         self->state.get_key_status = cchip8_sdl_get_key_status;
     }
-    else if(strcmp(RESULT_GET_VALUE(input_result), "none") == 0)
+    else if(strcmp(input, "none") == 0)
     {
         fprintf(stdout, "[CHP8] Input: none.\n");
         self->state.get_key_status = cchip8_none_get_key_status;        
@@ -438,9 +439,10 @@ maybe_t cchip8_run_from_ini(ini_file_t* config)
         result.error = "Output type was not specified in the INI file!";
         return result;
     }
-    if(strcmp(RESULT_GET_VALUE(output_result), "sdl") == 0)
+    char* const output = RESULT_GET_VALUE(output_result);
+    if(strcmp(output, "sdl") == 0)
         cchip8_run_sdl(&emulator, config);
-    else if(strcmp(RESULT_GET_VALUE(output_result), "none") == 0)
+    else if(strcmp(output, "none") == 0)
         cchip8_run_none(&emulator, config);
     else {
         result.ok = false;

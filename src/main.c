@@ -1,3 +1,4 @@
+#include "auxum/std/error.h"
 #include <auxum/std.h>
 #include <auxum/file/ini.h>
 #include <drivers/chip8.h>
@@ -21,11 +22,24 @@ int main(int argc, char* argv[])
     }
     
     // Run the emulator.
-    maybe_t result = cchip8_run_from_ini(&RESULT_GET_VALUE(config_result));
-    ini_file_free(&RESULT_GET_VALUE(config_result));
-    if(!IS_OK(result)) {
-        show_error(RESULT_GET_ERROR(result));
+    ini_file_t* const config = &RESULT_GET_VALUE(config_result);
+    ini_string_result_t type_result = ini_get_string(config, "system", "module");
+    if(!IS_OK(type_result))
+    {
+        show_error("No module specified to run!");
         return -1;
     }
-    return 0;
+    char* const type = RESULT_GET_VALUE(type_result);
+    if(strcmp(type, "chip8") == 0)
+    {
+        maybe_t result = cchip8_run_from_ini(&RESULT_GET_VALUE(config_result));
+        ini_file_free(&RESULT_GET_VALUE(config_result));
+        if(!IS_OK(result)) {
+            show_error(RESULT_GET_ERROR(result));
+            return -1;
+        }
+        return 0;
+    }
+    show_error("Invalid module type specified!");
+    return -1;
 }
