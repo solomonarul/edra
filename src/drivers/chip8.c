@@ -65,6 +65,12 @@ uint8_t get_random(void* arg)
     return rand();
 }
 
+static void cchip8_free(cchip8_context_t* self)
+{
+    bitset_free(&self->display_memory);
+    SDL_DestroyRWLock(self->display_lock);
+}
+
 void cchip8_init(cchip8_context_t* self)
 {
     // Setup state and callbacks.
@@ -187,14 +193,10 @@ void cchip8_run_none(cchip8_context_t *self, ini_file_t *config)
 
     // Main loop.
     bool app_running = true;
-    int count = 100;
     while(app_running)  // No need to sync here, running one frame more than the CPU can't hurt.
     {
         if(!threaded)
             cchip8_step(self, 60);
-        count--;
-        if(count == 0)
-            break;
         thread_sleep(SDL_NS_PER_SECOND / 60);
     }
 
@@ -447,10 +449,4 @@ maybe_t cchip8_run_from_ini(ini_file_t* config)
     }
     result.ok = true;
     return result;
-}
-
-void cchip8_free(cchip8_context_t* self)
-{
-    bitset_free(&self->display_memory);
-    SDL_DestroyRWLock(self->display_lock);
 }

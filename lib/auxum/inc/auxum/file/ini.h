@@ -43,7 +43,7 @@ struct ini_value {
 typedef struct ini_value ini_value_t;
 
 ini_file_result_t ini_file_read(char* const path);
-ini_file_t ini_file_parse(FILE* file);
+ini_file_result_t ini_file_parse(FILE* file);
 void ini_file_print(ini_file_t* self, FILE* file);
 void ini_file_free(ini_file_t* self);
 

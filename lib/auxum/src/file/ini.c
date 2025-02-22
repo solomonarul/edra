@@ -50,15 +50,15 @@ ini_file_result_t ini_file_read(char* const path)
         result.error = "INI file doesn't exist!";
         return result;
     }
-    result.ok = true;
-    result.result = ini_file_parse(input);
+    result = ini_file_parse(input);
     fclose(input);
     return result;
 }
 
-ini_file_t ini_file_parse(FILE* file)
+ini_file_result_t ini_file_parse(FILE* file)
 {
     // Create the array.
+    ini_file_result_t result_file;
     ini_file_t result;
     dynarray_init(&result.sections, sizeof(ini_section_t), 1);
 
@@ -108,7 +108,9 @@ ini_file_t ini_file_parse(FILE* file)
         }
         // Ignore otherwise.
     }
-    return result;
+    result_file.ok = true;
+    result_file.result = result;
+    return result_file;
 }
 
 static void ini_data_print(ini_data_t* self, FILE* file)
