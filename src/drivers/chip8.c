@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <assert.h>
 
+static char* const CHIP8_ERROR_INI_NO_CORE_SECTION = "No chip8.core section in INI file!";
+
 uint8_t memory_read_b(void* arg, uint16_t address)
 {
     cchip8_context_t* const self = arg;
@@ -170,12 +172,23 @@ bool cchip8_none_get_key_status(void* args, uint8_t key)
     return false;
 }
 
-void cchip8_run_none(cchip8_context_t *self, ini_file_t *config)
+maybe_t cchip8_run_none(cchip8_context_t *self, ini_file_t *config)
 {
+    maybe_t result;
     fprintf(stdout, "[CHP8] Output: none.\n");
 
     // Create CPU thread.
-    bool threaded = RESULT_GET_OR(ini_get_bool(config, "chip8.core", "threaded"), false);
+    ini_section_ptr_result_t core_section_result = ini_file_get_section(config, "chip8.core");
+    if(!IS_OK(core_section_result))
+    {
+        result.ok = false;
+        result.error = CHIP8_ERROR_INI_NO_CORE_SECTION;
+        return result;
+    }
+    ini_section_t* const core_section = core_section_result.result;
+    ini_data_ptr_result_t threaded_data_result = ini_section_get_data(core_section, "threaded");
+    if(!IS_OK(threaded_data_result)) threaded_data_result.result = NULL;
+    bool threaded = RESULT_GET_OR(ini_data_get_as_bool(threaded_data_result.result), false);
     SDL_Thread* cpu_thread = NULL;
     if(threaded)
     {
@@ -183,8 +196,9 @@ void cchip8_run_none(cchip8_context_t *self, ini_file_t *config)
         if(cpu_thread == NULL)
         {
             cchip8_free(self);
-            fprintf(stderr, "[EROR] Could not create emulator thread!\n");
-            return;
+            result.ok = false;
+            result.error = "Could not create emulator thread!";
+            return result;
         }
     }
 
@@ -204,6 +218,8 @@ void cchip8_run_none(cchip8_context_t *self, ini_file_t *config)
     }
 
     cchip8_free(self);
+    result.ok = true;
+    return result;
 }
 
 void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config)
@@ -212,28 +228,50 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config)
 
     // Convert the key mappings to SDL keys.
     fprintf(stdout, "[CHP8] SDL keys: ");
-    ini_data_t* input_section = ini_file_get_data(config, "chip8.input.sdl.input", "keys");
-    for(uint32_t index = 0; index < 0x10; index++)
+    ini_section_ptr_result_t input_section_result = ini_file_get_section(config, "chip8.input.sdl.input");
+    if(!IS_OK(input_section_result))
     {
-        fprintf(stdout, "[");
-        dynarray_init(&self->key_mappings[index], sizeof(SDL_Scancode), 0);
-        ini_data_t* key_array = ini_data_get_from_array(input_section, index);
-        for(int index_key = 0; index_key < ini_data_get_array_size(key_array); index_key++)
-        {
-            char* const key = ini_data_get_as_string(ini_data_get_from_array(key_array, index_key)).result;
-            SDL_Scancode code = SDL_GetScancodeFromKey(SDL_GetKeyFromName(key), NULL);
-            if(code != SDL_SCANCODE_UNKNOWN)
-            {
-                fprintf(stdout, "%s", key);
-                dynarray_push_back(&self->key_mappings[index], &code);
-            }
-        }
-        if(index != 0xF)
-            fprintf(stdout, "], ");
-        else
-            fprintf(stdout, "]");
+        fprintf(stderr, "[CHIP8] [WARN] No SDL Key section found, using default mapping!\n");
+        fprintf(stderr, "TODO: Implement this.\n");
     }
-    fprintf(stdout, "\n");
+    else {
+        ini_section_t* const input_section = input_section_result.result;
+        ini_data_ptr_result_t input_data_result = ini_section_get_data(input_section, "keys");
+        if(!IS_OK(input_data_result))
+        {
+            fprintf(stderr, "[CHIP8] [WARN] No SDL Key listing found, using default mapping!\n");
+            fprintf(stderr, "TODO: Implement this.\n");
+        }
+        ini_data_t* const input_data = input_data_result.result;
+        for(uint32_t index = 0; index < 0x10; index++)
+        {
+            fprintf(stdout, "[");
+            dynarray_init(&self->key_mappings[index], sizeof(SDL_Scancode), 0);
+            ini_data_ptr_result_t key_array_result = ini_data_get_from_array(input_data, index);
+            if(!IS_OK(key_array_result))
+            {
+                fprintf(stderr, "[CHIP8] [WARN] Ignoring key %d as its data is not valid!\n", index);
+                continue;
+            }
+            ini_data_t* const key_array = key_array_result.result;
+            for(int index_key = 0; index_key < ini_data_get_array_size(key_array); index_key++)
+            {
+                // This should be always valid.
+                char* const key = ini_data_get_as_string(ini_data_get_from_array(key_array, index_key).result).result;
+                SDL_Scancode code = SDL_GetScancodeFromKey(SDL_GetKeyFromName(key), NULL);
+                if(code != SDL_SCANCODE_UNKNOWN)
+                {
+                    fprintf(stdout, "%s", key);
+                    dynarray_push_back(&self->key_mappings[index], &code);
+                }
+            }
+            if(index != 0xF)
+                fprintf(stdout, "], ");
+            else
+                fprintf(stdout, "]");
+        }
+        fprintf(stdout, "\n");
+    }
 
     // Init SDL subsystem.
     if(!SDL_Init(SDL_INIT_VIDEO))
@@ -243,7 +281,8 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config)
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", "Could not initialize SDL3!", NULL);
         return;
     }
-    char* const rom_path = ini_data_get_as_string(ini_file_get_data(config, "chip8.core", "path")).result;
+    ini_section_t* const core_section = ini_file_get_section(config, "chip8.core").result;
+    char* const rom_path = ini_data_get_as_string(ini_section_get_data(core_section, "path").result).result;
     const char* app_title = "cchip8 | ";
     char window_title[strlen(rom_path) + strlen(app_title) + 1];
     string_concat((char* const)window_title, (char* const)app_title, (char* const)rom_path);
@@ -267,7 +306,7 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config)
     SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     // Create CPU thread.
-    bool threaded = RESULT_GET_OR(ini_get_bool(config, "chip8.core", "threaded"), false);
+    bool threaded = RESULT_GET_OR(ini_data_get_as_bool(ini_section_get_data(core_section, "threaded").result), false);
     SDL_Thread* cpu_thread = NULL;
     if(threaded)
     {
@@ -283,14 +322,14 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config)
     }
 
     // Color parsing.
-    ini_data_t* const foreground_array = ini_file_get_data(config, "chip8.output.sdl.output", "foreground");
-    ini_data_t* const background_array = ini_file_get_data(config, "chip8.output.sdl.output", "background");
+    ini_data_t* const foreground_array = ini_file_get_data(config, "chip8.output.sdl.output", "foreground").result;
+    ini_data_t* const background_array = ini_file_get_data(config, "chip8.output.sdl.output", "background").result;
     struct SDL_Color foreground, background;
     if(ini_data_get_array_size(foreground_array) == 3)
     {
-        foreground.r = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 0)).result;
-        foreground.g = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 1)).result;
-        foreground.b = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 2)).result;
+        foreground.r = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 0).result).result;
+        foreground.g = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 1).result).result;
+        foreground.b = ini_data_get_as_int(ini_data_get_from_array(foreground_array, 2).result).result;
     }
     else {
         foreground.r = 200;
@@ -299,9 +338,9 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config)
     }
     if(ini_data_get_array_size(background_array) == 3)
     {
-        background.r = ini_data_get_as_int(ini_data_get_from_array(background_array, 0)).result;
-        background.g = ini_data_get_as_int(ini_data_get_from_array(background_array, 1)).result;
-        background.b = ini_data_get_as_int(ini_data_get_from_array(background_array, 2)).result;
+        background.r = ini_data_get_as_int(ini_data_get_from_array(background_array, 0).result).result;
+        background.g = ini_data_get_as_int(ini_data_get_from_array(background_array, 1).result).result;
+        background.b = ini_data_get_as_int(ini_data_get_from_array(background_array, 2).result).result;
     }
     else {
         background.r = 200;
@@ -365,11 +404,12 @@ static maybe_t cchip8_init_from_ini(cchip8_context_t* self, ini_file_t* config)
     cchip8_init(self);
     
     // Speed parsing.
-    self->speed = RESULT_GET_OR(ini_get_int(config, "chip8.core", "speed"), 600);
+    ini_section_t* const core_section = ini_file_get_section(config, "chip8.core").result;
+    self->speed = RESULT_GET_OR(ini_data_get_as_int(ini_section_get_data(core_section, "speed").result), 600);
     fprintf(stdout, "[CHP8] Speed: %d ips.\n", self->speed);
 
     // Input type parsing.
-    ini_string_result_t const input_result = ini_get_string(config, "chip8.core", "input");
+    ini_string_result_t const input_result = ini_data_get_as_string(ini_section_get_data(core_section, "input").result);
     if(!IS_OK(input_result))
     {
         cchip8_free(self);
@@ -395,7 +435,7 @@ static maybe_t cchip8_init_from_ini(cchip8_context_t* self, ini_file_t* config)
     }
 
     // Load the ROM.
-    ini_string_result_t const rom_path_result = ini_get_string(config, "chip8.core", "path");
+    ini_string_result_t const rom_path_result = ini_data_get_as_string(ini_section_get_data(core_section, "path").result);
     if(!IS_OK(rom_path_result))
     {
         cchip8_free(self);
@@ -428,7 +468,8 @@ maybe_t cchip8_run_from_ini(ini_file_t* config)
     cchip8_init_from_ini(&emulator, config);
     
     // Output type parsing and running.
-    ini_string_result_t const output_result = ini_get_string(config, "chip8.core", "output");
+    ini_section_t* const core_section = ini_file_get_section(config, "chip8.core").result;
+    ini_string_result_t const output_result = ini_data_get_as_string(ini_section_get_data(core_section, "output").result);
     if(!IS_OK(output_result))
     {
         cchip8_free(&emulator);

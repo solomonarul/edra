@@ -22,7 +22,20 @@ int main(int argc, char* argv[])
     
     // Run the emulator.
     ini_file_t* const config = &RESULT_GET_VALUE(config_result);
-    ini_string_result_t type_result = ini_get_string(config, "system", "module");
+    ini_section_ptr_result_t system_section_result = ini_file_get_section(config, "system");
+    if(!IS_OK(system_section_result))
+    {
+        show_error("There is no system section in the INI file!");
+        return -1;
+    }
+    ini_section_t* const system_section = RESULT_GET_VALUE(system_section_result);
+    ini_data_ptr_result_t type_data_result = ini_section_get_data(system_section, "module");
+    if(!IS_OK(type_data_result))
+    {
+        show_error("There is no module in the system section of the INI file!");
+        return -1;
+    }
+    ini_string_result_t type_result = ini_data_get_as_string(RESULT_GET_VALUE(type_data_result));
     if(!IS_OK(type_result))
     {
         show_error("No module specified to run!");

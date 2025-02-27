@@ -7,8 +7,11 @@
 #include <assert.h>
 
 static char* const INI_ERROR_INVALID_DATA = "INI data is invalid!";
+static char* const INI_ERROR_DATA_NOT_FOUND = "INI data was not found!";
+static char* const INI_ERROR_SECTION_NOT_FOUND = "INI section was not found!";
 static char* const INI_ERROR_NOT_VALUE = "INI data is not a value!";
 static char* const INI_ERROR_NOT_INT = "INI data is not a valid number!";
+static char* const INI_ERROR_ARRAY_TOO_SMALL = "Tried to read outside of INI array!";
 
 static void ini_array_parse(ini_data_t* self, char* line)
 {
@@ -191,34 +194,53 @@ void ini_file_free(ini_file_t* self)
     dynarray_free(self->sections);
 }
 
-ini_section_t* ini_file_get_section(ini_file_t* self, char* const key)
+ini_section_ptr_result_t ini_file_get_section(ini_file_t* self, char* const key)
 {
+    ini_section_ptr_result_t result;
     for(uint32_t index = 0; index < self->sections.size; index++)
     {
         ini_section_t* const value = dynarray_get(self->sections, index);
         if((value->key != NULL && strcmp(value->key, key) == 0) || (value->key == NULL && key == NULL))
-            return value;
+        {
+            result.ok = true;
+            result.result = value;
+            return result;
+        }
     }
-    return NULL;
+    result.ok = false;
+    result.error = INI_ERROR_SECTION_NOT_FOUND;
+    return result;
 }
 
-ini_data_t* ini_file_get_data(ini_file_t* self, char* const section, char* const key)
+ini_data_ptr_result_t ini_file_get_data(ini_file_t* self, char* const section, char* const key)
 {
-    ini_section_t* section_data = ini_file_get_section(self, section);
-    if(section_data == NULL)
-        return NULL;
-    return ini_section_get_data(section_data, key);
+    ini_data_ptr_result_t result;
+    ini_section_ptr_result_t section_data = ini_file_get_section(self, section);
+    if(!IS_OK(section_data))
+    {
+        result.ok = false;
+        result.error = section_data.error;
+        return result;
+    }
+    return ini_section_get_data(section_data.result, key);
 }
 
-ini_data_t* ini_section_get_data(ini_section_t* self, char* const key)
+ini_data_ptr_result_t ini_section_get_data(ini_section_t* self, char* const key)
 {
+    ini_data_ptr_result_t result;
     for(uint32_t index = 0; index < self->values.size; index++)
     {
         ini_value_t* const value = dynarray_get(self->values, index);
         if(strcmp(value->key, key) == 0)
-            return &value->value;
+        {
+            result.ok = true;
+            result.result = &value->value;
+            return result;
+        }
     }
-    return NULL;
+    result.ok = false;
+    result.error = INI_ERROR_DATA_NOT_FOUND;
+    return result;
 }
 
 int ini_data_get_array_size(ini_data_t* self)
@@ -229,14 +251,25 @@ int ini_data_get_array_size(ini_data_t* self)
     return self->data.array.size;
 }
 
-ini_data_t* ini_data_get_from_array(ini_data_t* self, uint32_t index)
+ini_data_ptr_result_t ini_data_get_from_array(ini_data_t* self, uint32_t index)
 {
+    ini_data_ptr_result_t result;
     if(self == NULL)
-        return NULL;
+    {
+        result.ok = false;
+        result.error = INI_ERROR_INVALID_DATA;
+        return result;
+    }
     assert(self->type == INI_DATA_ARRAY);
     if(self->data.array.size <= index)
-        return NULL;
-    return (ini_data_t*)dynarray_get(self->data.array, index);
+    {
+        result.ok = false;
+        result.error = INI_ERROR_ARRAY_TOO_SMALL;
+        return result;
+    }
+    result.ok = true;
+    result.result = dynarray_get(self->data.array, index);
+    return result;
 }
 
 ini_string_result_t ini_data_get_as_string(ini_data_t* self)
