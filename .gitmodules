@@ -1,0 +1,3 @@
+[submodule "lib/auxum"]
+	path = lib/auxum
+	url = https://github.com/solomonarul/auxum.git
