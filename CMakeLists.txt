@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 
 add_subdirectory(lib)
 
-project(app)
+project(edra)
 
 file(
     GLOB_RECURSE

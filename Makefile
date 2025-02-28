@@ -10,10 +10,10 @@ bur:
 	@cmake --build build/release --parallel 12
 	@cmake -E make_directory bin
 	@cmake -E copy build/release/compile_commands.json build/compile_commands.json
-	@cmake -E copy build/release/app bin/release/app
+	@cmake -E copy build/release/edra bin/release/edra
 
 rur: bur
-	@./build/release/app ./roms/launch.ini
+	@./build/release/edra ./roms/launch.ini
 
 bwr:
 	@cmake -E make_directory build
@@ -21,10 +21,10 @@ bwr:
 	@cmake --build build/release --parallel 12
 	@cmake -E make_directory bin
 	@cmake -E copy build/release/compile_commands.json build/compile_commands.json
-	@cmake -E copy build/release/app.exe bin/release/app.exe
+	@cmake -E copy build/release/edra.exe bin/release/edra.exe
 
 rwr: bwr
-	@./bin/release/app.exe roms/launch.ini
+	@./bin/release/edra.exe roms/launch.ini
 
 bud:
 	@cmake -E make_directory build
@@ -34,10 +34,10 @@ bud:
 	@cmake -E copy build/debug/compile_commands.json build/compile_commands.json
 	@cmake -E copy build/debug/lib/auxum/auxum_test bin/debug/test/auxum_test
 	@cmake -E copy build/debug/lib/cchip8/cchip8_test bin/debug/test/cchip8_test
-	@cmake -E copy build/debug/app bin/debug/app
+	@cmake -E copy build/debug/edra bin/debug/edra
 
 rud: bud
-	@./bin/debug/app roms/launch.ini
+	@./bin/debug/edra roms/launch.ini
 
 bwd:
 	@cmake -E make_directory build
@@ -47,11 +47,11 @@ bwd:
 	@cmake -E copy build/debug/compile_commands.json build/compile_commands.json
 	@cmake -E copy build/debug/lib/auxum/auxum_test.exe bin/debug/test/auxum_test.exe
 	@cmake -E copy build/debug/lib/cchip8/cchip8_test.exe bin/debug/test/cchip8_test.exe
-	@cmake -E copy build/debug/app.pdb bin/debug/app.pdb
-	@cmake -E copy build/debug/app.exe bin/debug/app.exe
+	@cmake -E copy build/debug/edra.pdb bin/debug/edra.pdb
+	@cmake -E copy build/debug/edra.exe bin/debug/edra.exe
 
 rwd: bwd
-	@./bin/debug/app.exe roms/launch.ini
+	@./bin/debug/edra.exe roms/launch.ini
 
 tw:
 	@./bin/debug/test/auxum_test.exe

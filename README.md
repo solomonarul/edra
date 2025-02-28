@@ -11,7 +11,7 @@
 ### We currently have:
 - Auxum, an utility library.
 - cchip8, multithreaded CHIP8 emulator.
-- app, which is the GUI, written with SDL3.
+- edra, which is the GUI, written with SDL3.
 
 ## TODO / nice to haves:
 - [x] Single threaded variant.
