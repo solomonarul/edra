@@ -1,6 +1,5 @@
 #include "drivers/chip8.h"
 #include <auxum/std.h>
-#include <auxum/os/thread.h>
 #include <SDL3/SDL.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -112,6 +111,8 @@ void cchip8_init(cchip8_context_t* self)
     memcpy((char*)self->memory, FONTSET, sizeof(uint8_t) * FONTSET_SIZE);
 }
 
+#define THREAD_NANOS (SDL_GetPerformanceCounter() * 1.0 / SDL_GetPerformanceFrequency() * SDL_NS_PER_SECOND)
+
 void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
 {
     if(!self->cpu.interpreter.running) return;
@@ -119,10 +120,10 @@ void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
     long start_time, end_time;
     if(self->speed == (uint32_t)-1)
     {
-        start_time = thread_get_nanos();
+        start_time = THREAD_NANOS;
         chip8_interpreter_step(&self->cpu.interpreter);
-        end_time = thread_get_nanos();
-        chip8_interpreter_update_timers(&self->cpu.interpreter, end_time - start_time + rand() % 100);   // rand() % 100 is a trick cuz thread_get_nanos() is not accurate enough.
+        end_time = THREAD_NANOS;
+        chip8_interpreter_update_timers(&self->cpu.interpreter, end_time - start_time + rand() % 100);   // rand() % 100 is a trick cuz THREAD_NANOS is not accurate enough.
     }
     else {
         start_time = 0;
@@ -144,7 +145,7 @@ static int cpu_thread_function(void* args)
         if(self->speed != (uint32_t)-1)
         {
             cchip8_step(self, 75);
-            thread_sleep(SDL_NS_PER_SECOND / 75);
+            SDL_DelayNS(SDL_NS_PER_SECOND / 75);
         }
         else
             cchip8_step(self, SDL_NS_PER_SECOND);
@@ -208,7 +209,7 @@ maybe_t cchip8_run_none(cchip8_context_t *self, ini_file_t *config)
     {
         if(!threaded)
             cchip8_step(self, 60);
-        thread_sleep(SDL_NS_PER_SECOND / 60);
+        SDL_DelayNS(SDL_NS_PER_SECOND / 60);
     }
 
     if(threaded)
@@ -383,7 +384,7 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config)
         if(threaded)
             SDL_UnlockRWLock(self->display_lock);
         SDL_RenderPresent(renderer);
-        thread_sleep(SDL_NS_PER_SECOND / 60);
+        SDL_DelayNS(SDL_NS_PER_SECOND / 60);
     }
 
     if(threaded)
