@@ -61,14 +61,14 @@ endif()
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
     ## Configuration options for this app
     # Display name (under bubble in LiveArea)
-    set(VITA_APP_NAME "Edra Emulator")
+    set(VITA_APP_NAME "Edra")
 
     # Unique ID must be exactly 9 characters. Recommended: XXXXYYYYY where X =
     # unique string of developer and Y = a unique number for this app
     set(VITA_TITLEID  "SLMN00000")
 
     # Optional version string to show in LiveArea's more info screen
-    set(VITA_VERSION  "00.10")
+    set(VITA_VERSION  "01.00")
 
     target_link_libraries(
         ${PROJECT_NAME}
