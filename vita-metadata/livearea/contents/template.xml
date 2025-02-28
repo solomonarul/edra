@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- https://www.psdevwiki.com/vita/index.php/template.xml -->
+<livearea style="psmobile" format-ver="01.00" content-rev="1">
+	<livearea-background>
+		<image>background.png</image>
+	</livearea-background>
+	 
+	<gate>
+		<startup-image>startup.png</startup-image>
+	</gate>
+	
+	<frame id="frame2">
+		<liveitem>
+			<text valign="bottom" align="left" text-align="left" text-valign="bottom" line-space="3" ellipsis="on">
+				<str color="#ffffff" size="40" bold="on" shadow="on">Storm Test App</str>
+			</text>
+		</liveitem>
+	</frame>
+	
+	<frame id="frame3">
+		<liveitem>
+			<target>https://ghostnear.github.io</target>
+			<text valign="top" align="left" text-align="left" text-valign="top" line-space="2" ellipsis="on">
+				<str size="22" shadow="on">by GhostNear</str>
+			</text>
+		</liveitem>
+	</frame>
+		
+	<frame id="frame4">
+		<liveitem>
+			<text align="left" text-align="left" word-wrap="off" ellipsis="on">
+				<str size="18" color="#ffffff" shadow="on">v1.00</str>
+			</text>
+		</liveitem>
+	</frame>
+</livearea>

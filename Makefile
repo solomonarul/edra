@@ -29,12 +29,16 @@ bwr:
 	@cmake --build build
 
 bvd:
-	@VITASDK=/usr/local/vitasdk cmake -B build -S . --preset vita-debug
-	@VITASDK=/usr/local/vitasdk cmake --build build
+	@cmake -B build -S . --preset vita-debug
+	@cmake --build build
+	@mkdir -p bin
+	@cp build/edra.vpk bin/edra.vpk
 
 bvr:
 	@cmake -B build -S . --preset vita-release
 	@cmake --build build
+	@mkdir -p bin
+	@cp build/edra.vpk bin/edra.vpk
 
 r:
 	@./bin/${TARGET} ./roms/launch.ini

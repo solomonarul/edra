@@ -401,7 +401,7 @@ void cchip8_run_sdl(cchip8_context_t *self, ini_file_t *config)
 
 static maybe_t cchip8_init_from_ini(cchip8_context_t* self, ini_file_t* config)
 {
-    maybe_t result = {};
+    maybe_t result = {0};
     cchip8_init(self);
     
     // Speed parsing.
@@ -465,7 +465,7 @@ static maybe_t cchip8_init_from_ini(cchip8_context_t* self, ini_file_t* config)
 maybe_t cchip8_run_from_ini(ini_file_t* config)
 {
     fprintf(stdout, "[INFO] Running CHIP8 emulator from INI file.\n");
-    maybe_t result = {};
+    maybe_t result = {0};
     cchip8_context_t emulator;
     cchip8_init_from_ini(&emulator, config);
     

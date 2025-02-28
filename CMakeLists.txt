@@ -1,8 +1,7 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.20)
 
 # PSvita specifics
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
-
     # VitaSDK is required
     if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
         if(DEFINED ENV{VITASDK})
@@ -11,19 +10,6 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
             message(FATAL_ERROR "Please define VITASDK to point to your SDK path!")
         endif()
     endif()
-
-    include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
-
-    ## Configuration options for this app
-    # Display name (under bubble in LiveArea)
-    set(VITA_APP_NAME "Edra")
-
-    # Unique ID must be exactly 9 characters. Recommended: XXXXYYYYY where X =
-    # unique string of developer and Y = a unique number for this app
-    set(VITA_TITLEID  "SLMN00000")
-
-    # Optional version string to show in LiveArea's more info screen
-    set(VITA_VERSION  "00.10")
 else()
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../bin/)
 endif()
@@ -51,7 +37,7 @@ endif()
 
 set_property(
     TARGET ${PROJECT_NAME}
-    PROPERTY C_STANDARD 23
+    PROPERTY C_STANDARD 17
 )
 
 target_include_directories(
@@ -66,20 +52,49 @@ target_compile_definitions(
         BUILD_TYPE_${CMAKE_BUILD_PLATFORM}
 )
 
-if(CMAKE_BUILD_PLATFORM MATCHES "WINDOWS")
+if(NOT "${SDL3_PATH}" STREQUAL "")
 find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
 else()
 find_package(SDL3 REQUIRED)
 endif()
-target_link_libraries(
-    ${PROJECT_NAME}
-    PUBLIC
-        auxum
-        cchip8
-        SDL3::SDL3
-)
 
-if(BUILD_TARGET MATCHES "VITA")
+if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
+    ## Configuration options for this app
+    # Display name (under bubble in LiveArea)
+    set(VITA_APP_NAME "Edra Emulator")
+
+    # Unique ID must be exactly 9 characters. Recommended: XXXXYYYYY where X =
+    # unique string of developer and Y = a unique number for this app
+    set(VITA_TITLEID  "SLMN00000")
+
+    # Optional version string to show in LiveArea's more info screen
+    set(VITA_VERSION  "00.10")
+
+    target_link_libraries(
+        ${PROJECT_NAME}
+        PUBLIC
+            auxum
+            cchip8
+            SDL3::SDL3
+            SceDisplay_stub
+            SceCtrl_stub
+            SceAudio_stub
+            SceAudioIn_stub
+            SceSysmodule_stub
+            SceGxm_stub
+            SceCommonDialog_stub
+            SceAppMgr_stub
+            SceTouch_stub
+            SceHid_stub
+            SceMotion_stub
+            jpeg png webp
+            pthread
+            freetype
+            z m
+    )
+
+    include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
+
     ## Create Vita files
     vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME})
 
@@ -92,8 +107,15 @@ if(BUILD_TARGET MATCHES "VITA")
         VERSION ${VITA_VERSION}
         NAME ${VITA_APP_NAME}
         FILE vita-metadata sce_sys
-        FILE assets assets
     )
 else()
+    target_link_libraries(
+        ${PROJECT_NAME}
+        PUBLIC
+            auxum
+            cchip8
+            SDL3::SDL3
+    )
+
     install(TARGETS ${PROJECT_NAME})
 endif()
