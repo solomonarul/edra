@@ -63,7 +63,7 @@ uint8_t get_random(void* arg)
     return rand();
 }
 
-static void cchip8_free(cchip8_context_t* self)
+void cchip8_free(cchip8_context_t* self)
 {
     bitset_free(&self->display_memory);
     SDL_DestroyRWLock(self->display_lock);

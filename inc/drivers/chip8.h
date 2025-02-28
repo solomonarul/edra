@@ -21,6 +21,9 @@ struct cchip8_context {
 };
 typedef struct cchip8_context cchip8_context_t;
 
+void cchip8_init(cchip8_context_t* self);
+void cchip8_free(cchip8_context_t* self);
+void cchip8_step(cchip8_context_t* self, uint32_t update_rate);
 maybe_t cchip8_run_from_ini(ini_file_t* config);
 
 #endif

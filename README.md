@@ -6,6 +6,7 @@
     - platforms:
         - w - Windows
         - u - Unix
+        - v - PSVita
     - d / r -> debug / release.
 - make r for an automated run.
 
