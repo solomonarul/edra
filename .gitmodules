@@ -1,3 +1,6 @@
 [submodule "lib/auxum"]
 	path = lib/auxum
 	url = https://github.com/solomonarul/auxum.git
+[submodule "lib/cchip8"]
+	path = lib/cchip8
+	url = https://github.com/solomonarul/cchip8.git
