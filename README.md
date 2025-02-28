@@ -1,17 +1,20 @@
-# This is a work in progress and will probably be split across multiple repos.
+# Edra
 
 ## How to compile:
-- specify SDL3_DIR in the build cache of CMake.
-- make bwd / make bwr to (build) the results.
-- make rwd / make rwr to (run + build) the results.
+- specify SDL3_DIR in the build cache of CMake if needed.
+- run make b{platform}{d/r} for an automated build.
+    - platforms:
+        - w - Windows
+        - u - Unix
+    - d / r -> debug / release.
+- similarly, run make r{platform}{d/r} for a quick way to run the app.
 
-## How to run:
+### Running details:
 - read [this](./roms/README.md).
 
-### We currently have:
-- Auxum, an utility library.
-- cchip8, multithreaded CHIP8 emulator.
-- edra, which is the GUI, written with SDL3.
+## Part of this project:
+- [auxum](https://github.com/solomonarul/auxum), an utility library.
+- [cchip8](https://github.com/solomonarul/cchip8), agnostic CHIP8 module.
 
 ## TODO / nice to haves:
 - [x] Single threaded variant.
