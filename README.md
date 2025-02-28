@@ -7,7 +7,7 @@
         - w - Windows
         - u - Unix
     - d / r -> debug / release.
-- similarly, run make r{platform}{d/r} for a quick way to run the app.
+- make r for an automated run.
 
 ### Running details:
 - read [this](./roms/README.md).

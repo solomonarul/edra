@@ -1,58 +1,40 @@
-.PHONY: bwd, rwd, bwr, rwr, c
+# This Makefile is meant to be used only in development environments.
+
+.DEFAULT_GOAL := _bruh
+
+TARGET = edra
+
+_bruh:
+	@echo "You didn't read the README, did you?"
 
 c:
-	@cmake -E remove_directory build
-	@cmake -E remove_directory bin
-
-bur:
-	@cmake -E make_directory build
-	@cmake -B build/release -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_BUILD_PLATFORM=UNIX
-	@cmake --build build/release --parallel 12
-	@cmake -E make_directory bin
-	@cmake -E copy build/release/compile_commands.json build/compile_commands.json
-	@cmake -E copy build/release/edra bin/release/edra
-
-rur: bur
-	@./build/release/edra ./roms/launch.ini
-
-bwr:
-	@cmake -E make_directory build
-	@cmake -B build/release -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_BUILD_PLATFORM=WINDOWS
-	@cmake --build build/release --parallel 12
-	@cmake -E make_directory bin
-	@cmake -E copy build/release/compile_commands.json build/compile_commands.json
-	@cmake -E copy build/release/edra.exe bin/release/edra.exe
-
-rwr: bwr
-	@./bin/release/edra.exe roms/launch.ini
+	@cmake -E remove_directory build && echo "[INFO]: Removed build directory."
+	@cmake -E remove_directory .cache && echo "[INFO]: Removed .cache directory."
+	@cmake -E remove_directory bin && echo "[INFO]: Removed .cache directory."
 
 bud:
-	@cmake -E make_directory build
-	@cmake -B build/debug -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_BUILD_PLATFORM=UNIX
-	@cmake --build build/debug --parallel 12
-	@cmake -E make_directory bin
-	@cmake -E copy build/debug/compile_commands.json build/compile_commands.json
-	@cmake -E copy build/debug/lib/auxum/auxum_test bin/debug/test/auxum_test
-	@cmake -E copy build/debug/lib/cchip8/cchip8_test bin/debug/test/cchip8_test
-	@cmake -E copy build/debug/edra bin/debug/edra
+	@cmake -B build -S . --preset unix-debug
+	@cmake --build build
 
-rud: bud
-	@./bin/debug/edra roms/launch.ini
+bur:
+	@cmake -B build -S . --preset unix-release
+	@cmake --build build
 
 bwd:
-	@cmake -E make_directory build
-	@cmake -B build/debug -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_BUILD_PLATFORM=WINDOWS
-	@cmake --build build/debug --parallel 12
-	@cmake -E make_directory bin
-	@cmake -E copy build/debug/compile_commands.json build/compile_commands.json
-	@cmake -E copy build/debug/lib/auxum/auxum_test.exe bin/debug/test/auxum_test.exe
-	@cmake -E copy build/debug/lib/cchip8/cchip8_test.exe bin/debug/test/cchip8_test.exe
-	@cmake -E copy build/debug/edra.pdb bin/debug/edra.pdb
-	@cmake -E copy build/debug/edra.exe bin/debug/edra.exe
+	@cmake -B build -S . --preset windows-debug
+	@cmake --build build
 
-rwd: bwd
-	@./bin/debug/edra.exe roms/launch.ini
+bwr:
+	@cmake -B build -S . --preset windows-release
+	@cmake --build build
 
-tw:
-	@./bin/debug/test/auxum_test.exe
-	@./bin/debug/test/cchip8_test.exe
+bvd:
+	@VITASDK=/usr/local/vitasdk cmake -B build -S . --preset vita-debug
+	@VITASDK=/usr/local/vitasdk cmake --build build
+
+bvr:
+	@cmake -B build -S . --preset vita-release
+	@cmake --build build
+
+r:
+	@./bin/${TARGET} ./roms/launch.ini

@@ -453,7 +453,8 @@ static maybe_t cchip8_init_from_ini(cchip8_context_t* self, ini_file_t* config)
         result.error = "Could not load specified ROM file!";
         return result;
     }
-    fread((char*)self->memory + self->state.pc, sizeof(uint8_t), 0x10000 - self->state.pc, rom);
+    uint16_t read = fread((char*)self->memory + self->state.pc, sizeof(uint8_t), 0x10000 - self->state.pc, rom);
+    UNUSED(read);
     fclose(rom);
     fprintf(stdout, "[CHP8] Using ROM at path: %s\n", path);
 
