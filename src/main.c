@@ -45,30 +45,44 @@ int main(int argc, char* argv[])
         0xf0, 0x88, 0x88, 0x88, 0xd0, 0xa0, 0x90, 0x00, 
         0x00, 0x88, 0xd8, 0xa8, 0x88, 0x88, 
     };
-    SDL_memcpy(self.memory + 0x200, norom, 62 * sizeof(uint8_t));
+    memcpy(self.memory + 0x200, norom, 62 * sizeof(uint8_t));
 
     // Init SDL subsystem.
     if(!SDL_Init(SDL_INIT_VIDEO))
     {
         cchip8_free(&self);
-        show_error("Could not initialize SDL3!");
+        char* const message = "Could not initialize SDL3! ";
+        char error[strlen(message) + strlen(SDL_GetError())];
+        string_concat(error, message, (char* const)SDL_GetError());
+        show_error(error);
         return -1;
     }
+#ifdef BUILD_TYPE_VITA
+    SDL_Window* window = SDL_CreateWindow("cchip8", 960, 544, 0);
+#else
     SDL_Window* window = SDL_CreateWindow("cchip8", 640, 320, SDL_WINDOW_RESIZABLE);
+#endif
     if(window == NULL)
     {
         cchip8_free(&self);
-        show_error("Could not create SDL3 window!");
+        char* const message = "Could not create SDL3 window! ";
+        char error[strlen(message) + strlen(SDL_GetError())];
+        string_concat(error, message, (char* const)SDL_GetError());
+        show_error(error);
         return -1;
     }
     SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
     if(renderer == NULL)
     {
         cchip8_free(&self);
-        show_error("Could not create SDL3 renderer!");
+        char* const message = "Could not create SDL3 renderer! ";
+        char error[strlen(message) + strlen(SDL_GetError())];
+        string_concat(error, message, (char* const)SDL_GetError());
+        show_error(error);
         SDL_DestroyWindow(window);
         return -1;
     }
+    SDL_SetRenderVSync(renderer, 1);
     SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     // Create CPU thread.
@@ -76,7 +90,10 @@ int main(int argc, char* argv[])
     if(cpu_thread == NULL)
     {
         cchip8_free(&self);
-        show_error("Could not create CHIP8 emulator thread!");
+        char* const message = "Could not create CHIP8 emulator thread!";
+        char error[strlen(message) + strlen(SDL_GetError())];
+        string_concat(error, message, (char* const)SDL_GetError());
+        show_error(error);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         return 0;
@@ -109,7 +126,6 @@ int main(int argc, char* argv[])
                     SDL_RenderPoint(renderer, x, y);
         SDL_UnlockRWLock(self.display_lock);
         SDL_RenderPresent(renderer);
-        SDL_DelayNS(SDL_NS_PER_SECOND / 60);
     }
 
     self.cpu.interpreter.running = false;

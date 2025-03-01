@@ -57,6 +57,13 @@ find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
 else()
 find_package(SDL3 REQUIRED)
 endif()
+target_link_libraries(
+    ${PROJECT_NAME}
+    PUBLIC
+        auxum
+        cchip8
+        SDL3::SDL3
+)
 
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
     ## Configuration options for this app
@@ -69,30 +76,7 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
 
     # Optional version string to show in LiveArea's more info screen
     set(VITA_VERSION  "01.00")
-
-    target_link_libraries(
-        ${PROJECT_NAME}
-        PUBLIC
-            auxum
-            cchip8
-            SDL3::SDL3
-            SceDisplay_stub
-            SceCtrl_stub
-            SceAudio_stub
-            SceAudioIn_stub
-            SceSysmodule_stub
-            SceGxm_stub
-            SceCommonDialog_stub
-            SceAppMgr_stub
-            SceTouch_stub
-            SceHid_stub
-            SceMotion_stub
-            jpeg png webp
-            pthread
-            freetype
-            z m
-    )
-
+    
     include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
 
     ## Create Vita files
@@ -109,13 +93,5 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
         FILE vita-metadata sce_sys
     )
 else()
-    target_link_libraries(
-        ${PROJECT_NAME}
-        PUBLIC
-            auxum
-            cchip8
-            SDL3::SDL3
-    )
-
     install(TARGETS ${PROJECT_NAME})
 endif()
