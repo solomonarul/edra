@@ -9,6 +9,17 @@ static void show_error(char* const error)
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", error, NULL);
 }
 
+static int show_sdl_error(char* const error)
+{
+    fprintf(stderr, "[EROR] %s(SDL Error: %s)\n", error, SDL_GetError());
+    int first_length = strlen(error);
+    int second_length = strlen(SDL_GetError());
+    char result[first_length + second_length + 1];
+    string_nconcat(result, error, first_length, (char* const)SDL_GetError(), second_length);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", result, NULL);
+    return -1;
+}
+
 static int cpu_thread_function(void* args)
 {
     cchip8_context_t* const self = args;
@@ -30,8 +41,30 @@ static int cpu_thread_function(void* args)
 
 int main(int argc, char* argv[])
 {
+    UNUSED(show_error);
     UNUSED(argc);
     UNUSED(argv);
+
+    // Init SDL subsystem.
+    if(!SDL_Init(SDL_INIT_VIDEO))
+        return show_sdl_error("Could not initialize SDL3! ");
+#ifdef BUILD_TYPE_VITA
+    SDL_Window* window = SDL_CreateWindow("cchip8", 960, 544, 0);
+#else
+    SDL_Window* window = SDL_CreateWindow("cchip8", 640, 320, SDL_WINDOW_RESIZABLE);
+#endif
+    if(window == NULL)
+        return show_sdl_error("Could not create SDL3 window! ");
+
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
+    if(renderer == NULL)
+    {
+        SDL_DestroyWindow(window);
+        return show_sdl_error("Could not create SDL3 renderer! ");
+    }
+    SDL_SetRenderVSync(renderer, 1);
+    SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
     cchip8_context_t self;
     cchip8_init(&self);
     uint8_t norom[62] =
@@ -47,56 +80,14 @@ int main(int argc, char* argv[])
     };
     memcpy(self.memory + 0x200, norom, 62 * sizeof(uint8_t));
 
-    // Init SDL subsystem.
-    if(!SDL_Init(SDL_INIT_VIDEO))
-    {
-        cchip8_free(&self);
-        char* const message = "Could not initialize SDL3! ";
-        char error[strlen(message) + strlen(SDL_GetError())];
-        string_concat(error, message, (char* const)SDL_GetError());
-        show_error(error);
-        return -1;
-    }
-#ifdef BUILD_TYPE_VITA
-    SDL_Window* window = SDL_CreateWindow("cchip8", 960, 544, 0);
-#else
-    SDL_Window* window = SDL_CreateWindow("cchip8", 640, 320, SDL_WINDOW_RESIZABLE);
-#endif
-    if(window == NULL)
-    {
-        cchip8_free(&self);
-        char* const message = "Could not create SDL3 window! ";
-        char error[strlen(message) + strlen(SDL_GetError())];
-        string_concat(error, message, (char* const)SDL_GetError());
-        show_error(error);
-        return -1;
-    }
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
-    if(renderer == NULL)
-    {
-        cchip8_free(&self);
-        char* const message = "Could not create SDL3 renderer! ";
-        char error[strlen(message) + strlen(SDL_GetError())];
-        string_concat(error, message, (char* const)SDL_GetError());
-        show_error(error);
-        SDL_DestroyWindow(window);
-        return -1;
-    }
-    SDL_SetRenderVSync(renderer, 1);
-    SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-
     // Create CPU thread.
     SDL_Thread* cpu_thread = SDL_CreateThread(cpu_thread_function, "c8 cpu thr", &self);
     if(cpu_thread == NULL)
     {
         cchip8_free(&self);
-        char* const message = "Could not create CHIP8 emulator thread!";
-        char error[strlen(message) + strlen(SDL_GetError())];
-        string_concat(error, message, (char* const)SDL_GetError());
-        show_error(error);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
-        return 0;
+        return show_sdl_error("Could not create CHIP8 emulator thread!");
     }
 
     // Main loop.
