@@ -57,12 +57,19 @@ find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
 else()
 find_package(SDL3 REQUIRED)
 endif()
+find_package(OpenGL REQUIRED)
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC
+        ${OPENGL_INCLUDE_DIRS}
+)
 target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC
         auxum
         cchip8
         SDL3::SDL3
+        ${OPENGL_LIBRARIES}
 )
 
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
