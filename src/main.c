@@ -1,7 +1,6 @@
 #include <auxum/std.h>
 #include <auxum/file/ini.h>
-#include <SDL3/SDL_opengl.h>
-#include "drivers/chip8.h"
+#include <drivers/chip8.h>
 
 // Error handler.
 static void show_error(char* const error)
@@ -43,7 +42,6 @@ static int cpu_thread_function(void* args)
 int main(int argc, char* argv[])
 {
     UNUSED(show_error);
-    UNUSED(cpu_thread_function);
     UNUSED(argc);
     UNUSED(argv);
 
@@ -51,22 +49,21 @@ int main(int argc, char* argv[])
     if(!SDL_Init(SDL_INIT_VIDEO))
         return show_sdl_error("Could not initialize SDL3! ");
 #ifdef BUILD_TYPE_VITA
-    SDL_Window* window = SDL_CreateWindow("edra", 960, 544, 0);
+    SDL_Window* window = SDL_CreateWindow("cchip8", 960, 544, 0);
 #else
-    SDL_Window* window = SDL_CreateWindow("edra", 640, 320, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+    SDL_Window* window = SDL_CreateWindow("cchip8", 640, 320, SDL_WINDOW_RESIZABLE);
 #endif
-    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);  
     if(window == NULL)
         return show_sdl_error("Could not create SDL3 window! ");
 
-    SDL_GLContext gl_context = SDL_GL_CreateContext(window);
-    if(gl_context == NULL)
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
+    if(renderer == NULL)
     {
         SDL_DestroyWindow(window);
-        return show_sdl_error("Could not create SDL3 OpenGL context! ");
+        return show_sdl_error("Could not create SDL3 renderer! ");
     }
-    SDL_GL_SetSwapInterval(1);
-    glViewport(0, 0, 640, 320);
+    SDL_SetRenderVSync(renderer, 1);
+    SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     cchip8_context_t self;
     cchip8_init(&self);
@@ -88,6 +85,7 @@ int main(int argc, char* argv[])
     if(cpu_thread == NULL)
     {
         cchip8_free(&self);
+        SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         return show_sdl_error("Could not create CHIP8 emulator thread!");
     }
@@ -104,24 +102,10 @@ int main(int argc, char* argv[])
             case SDL_EVENT_QUIT:
                 app_running = false;
                 break;
-            case SDL_EVENT_WINDOW_RESIZED:
-                glViewport(0, 0, event.window.data1, event.window.data2);
-                break;
             }
         }
 
-        glClearColor(0.2, 0.2, 0.2, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glColor3f(1, 0, 0);
-        SDL_LockRWLockForReading(self.display_lock);
-        for(uint8_t x = 0; x < 64; x++)
-            for(uint8_t y = 0; y < 32; y++)
-                if(bitset_get(&self.display_memory, x + y * 64))
-                    glRectd(x / 64.0 * 2 - 1, (32 - y) / 32.0 * 2 - 1, (x + 1) / 64.0 * 2 - 1, (32 - y + 1) / 32.0 * 2 - 1);
-        SDL_UnlockRWLock(self.display_lock);
-        SDL_GL_SwapWindow(window);
-        SDL_Delay(16);
-        /*SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
+        SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
         SDL_RenderClear(renderer);
 
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
@@ -132,14 +116,14 @@ int main(int argc, char* argv[])
                 if(bitset_get(&self.display_memory, x + y * 64))
                     SDL_RenderPoint(renderer, x, y);
         SDL_UnlockRWLock(self.display_lock);
-        SDL_RenderPresent(renderer);*/
+        SDL_RenderPresent(renderer);
     }
 
     self.cpu.interpreter.running = false;
     SDL_WaitThread(cpu_thread, NULL); 
 
     cchip8_free(&self);
-    SDL_GL_DestroyContext(gl_context);
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
