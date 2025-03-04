@@ -28,11 +28,19 @@ static void clear_screen(void* arg)
     SDL_UnlockRWLock(self->display_lock);
 }
 
+static void resize_screen(void* arg, uint8_t width, uint8_t height)
+{
+    cchip8_context_t* const self = arg;
+    self->display_width = width;
+    self->display_height = height;
+    bitset_resize(&self->display_memory, width * height);
+}
+
 bool draw_sprite(void* arg, uint16_t address, uint8_t x, uint8_t y, uint8_t n)
 {
     cchip8_context_t* const self = arg;
-    x %= 64;
-    y %= 32;
+    x %= self->display_width;
+    y %= self->display_height;
     bool collision = false;
     SDL_LockRWLockForWriting(self->display_lock);
     for(uint16_t index = address; index < address + n; index++)
@@ -42,8 +50,8 @@ bool draw_sprite(void* arg, uint16_t address, uint8_t x, uint8_t y, uint8_t n)
         {
             const uint8_t new_x = x + (7 - bit);
             const uint8_t new_y = y + (index - address);
-            if(new_x > 63 || new_y > 31) continue;
-            const int position = new_x + new_y * 64;
+            if(new_x >= self->display_width || new_y >= self->display_height) continue;
+            const int position = new_x + new_y * self->display_width;
             const bool pixel = (byte & (1 << bit)) != 0;
             if(pixel == true && bitset_get(&self->display_memory, position) == pixel) collision = true;
             bitset_xor(&self->display_memory, position, pixel);
@@ -51,6 +59,12 @@ bool draw_sprite(void* arg, uint16_t address, uint8_t x, uint8_t y, uint8_t n)
     }
     SDL_UnlockRWLock(self->display_lock);
     return collision;
+}
+
+bool no_key(void* arg, uint8_t index)
+{
+    UNUSED(arg); UNUSED(index);
+    return false;
 }
 
 uint8_t get_random(void* arg)
@@ -75,7 +89,12 @@ void cchip8_init(cchip8_context_t* self)
     self->state.draw_sprite = draw_sprite;
     self->state.clear_screen = clear_screen;
     self->state.get_random = get_random;
+    self->state.resize = resize_screen;
+    self->state.get_key_status = no_key;
     self->state.aux_arg = self;
+    
+    self->display_width = 64;
+    self->display_height = 32;
     bitset_init(&self->display_memory, 64 * 32);
     self->display_lock = SDL_CreateRWLock();
 

@@ -2,7 +2,14 @@
 #include <auxum/file/ini.h>
 #include <drivers/chip8.h>
 
-static int show_sdl_error(char* const error)
+static void show_error(char* const error)
+{
+    fprintf(stderr, "[EROR] %s\n", error);
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", error, NULL);
+    exit(-1);
+}
+
+static void show_sdl_error(char* const error)
 {
     fprintf(stderr, "[EROR] %s(SDL Error: %s)\n", error, SDL_GetError());
     int first_length = strlen(error);
@@ -34,31 +41,39 @@ static int cpu_thread_function(void* args)
 
 int main(int argc, char* argv[])
 {
+    UNUSED(show_error);
     UNUSED(argc);
     UNUSED(argv);
 
     // Init SDL subsystem.
     if(!SDL_Init(SDL_INIT_VIDEO))
-        return show_sdl_error("Could not initialize SDL3! ");
+        show_sdl_error("Could not initialize SDL3! ");
 #ifdef BUILD_TYPE_VITA
     SDL_Window* window = SDL_CreateWindow("cchip8", 960, 544, 0);
 #else
     SDL_Window* window = SDL_CreateWindow("cchip8", 640, 320, SDL_WINDOW_RESIZABLE);
 #endif
     if(window == NULL)
-        return show_sdl_error("Could not create SDL3 window! ");
+        show_sdl_error("Could not create SDL3 window! ");
 
     SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
     if(renderer == NULL)
     {
         SDL_DestroyWindow(window);
-        return show_sdl_error("Could not create SDL3 renderer! ");
+        show_sdl_error("Could not create SDL3 renderer! ");
     }
     SDL_SetRenderVSync(renderer, 1);
-    SDL_SetRenderLogicalPresentation(renderer, 64, 32, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
     cchip8_context_t self;
     cchip8_init(&self);
+    /*FILE* rom = fopen("./roms/chip8/hires/Hires Particle Demo [zeroZshadow, 2008].ch8", "rb");
+    if(rom == NULL)
+    {
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        show_error("CHIP8 ROM file does not exist!");
+    }
+    fread(self.memory + 0x200, sizeof(uint8_t), 0x1000 - self.state.pc, rom);*/
     uint8_t norom[62] =
     {
         0x61, 0x0e, 0x62, 0x0d, 0xa2, 0x22, 0xd1, 0x27, 
@@ -79,7 +94,7 @@ int main(int argc, char* argv[])
         cchip8_free(&self);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
-        return show_sdl_error("Could not create CHIP8 emulator thread!");
+        show_sdl_error("Could not create CHIP8 emulator thread!");
     }
 
     // Main loop.
@@ -87,6 +102,8 @@ int main(int argc, char* argv[])
     bool app_running = true;
     while(app_running)  // No need to sync here, running one frame more than the CPU can't hurt.
     {
+        SDL_SetRenderLogicalPresentation(renderer, self.display_width, self.display_height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
         while(SDL_PollEvent(&event))
         {
             switch(event.type)
@@ -103,9 +120,9 @@ int main(int argc, char* argv[])
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
         
         SDL_LockRWLockForReading(self.display_lock);
-        for(uint8_t x = 0; x < 64; x++)
-            for(uint8_t y = 0; y < 32; y++)
-                if(bitset_get(&self.display_memory, x + y * 64))
+        for(uint8_t x = 0; x < self.display_width; x++)
+            for(uint8_t y = 0; y < self.display_height; y++)
+                if(bitset_get(&self.display_memory, x + y * self.display_width))
                     SDL_RenderPoint(renderer, x, y);
         SDL_UnlockRWLock(self.display_lock);
         SDL_RenderPresent(renderer);
