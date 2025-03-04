@@ -2,13 +2,6 @@
 #include <auxum/file/ini.h>
 #include <drivers/chip8.h>
 
-// Error handler.
-static void show_error(char* const error)
-{
-    fprintf(stderr, "[EROR] %s\n", error);
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", error, NULL);
-}
-
 static int show_sdl_error(char* const error)
 {
     fprintf(stderr, "[EROR] %s(SDL Error: %s)\n", error, SDL_GetError());
@@ -17,7 +10,7 @@ static int show_sdl_error(char* const error)
     char result[first_length + second_length + 1];
     string_nconcat(result, error, first_length, (char* const)SDL_GetError(), second_length);
     SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", result, NULL);
-    return -1;
+    exit(-1);
 }
 
 static int cpu_thread_function(void* args)
@@ -41,7 +34,6 @@ static int cpu_thread_function(void* args)
 
 int main(int argc, char* argv[])
 {
-    UNUSED(show_error);
     UNUSED(argc);
     UNUSED(argv);
 

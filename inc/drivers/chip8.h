@@ -2,8 +2,7 @@
 #ifndef CCHIP8_DRIVER_H
 #define CCHIP8_DRIVER_H
 
-#include <auxum/file/ini.h>
-#include <auxum/data/bitset.h>
+#include <auxum/data.h>
 #include <cchip8/state.h>
 #include <cchip8/cpu/interpreter.h>
 #include <SDL3/SDL.h>
@@ -24,6 +23,5 @@ typedef struct cchip8_context cchip8_context_t;
 void cchip8_init(cchip8_context_t* self);
 void cchip8_free(cchip8_context_t* self);
 void cchip8_step(cchip8_context_t* self, uint32_t update_rate);
-maybe_t cchip8_run_from_ini(ini_file_t* config);
 
 #endif
