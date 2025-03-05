@@ -8,8 +8,8 @@
 #include <SDL3/SDL.h>
 
 struct cchip8_context {
+    bool threaded;
     chip8_state_t state;
-    uint8_t display_width, display_height;
     bitset_t display_memory;
     SDL_RWLock* display_lock;
     uint32_t speed;

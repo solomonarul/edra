@@ -23,41 +23,128 @@ static void memory_write_b(void* arg, uint16_t address, uint8_t value)
 static void clear_screen(void* arg)
 {
     cchip8_context_t* const self = arg;
-    SDL_LockRWLockForWriting(self->display_lock);
+    if(self->threaded)
+        SDL_LockRWLockForWriting(self->display_lock);
+
     bitset_clear(&self->display_memory);
-    SDL_UnlockRWLock(self->display_lock);
+
+    if(self->threaded)
+        SDL_UnlockRWLock(self->display_lock);
 }
 
 static void resize_screen(void* arg, uint8_t width, uint8_t height)
 {
     cchip8_context_t* const self = arg;
-    self->display_width = width;
-    self->display_height = height;
+    self->state.display_width = width;
+    self->state.display_height = height;
     bitset_resize(&self->display_memory, width * height);
+}
+
+static void scroll_screen(void* arg, uint8_t amount, chip8_scroll_direction_t direction)
+{
+    cchip8_context_t* const self = arg;
+    UNUSED(amount);
+    if(self->threaded)
+        SDL_LockRWLockForWriting(self->display_lock);
+    switch(direction)
+    {
+    case CHIP8_SCROLL_DOWN:
+        for(uint8_t index = self->state.display_height - 1; index >= amount; index--)
+        {
+            for(uint8_t pixel = 0; pixel < self->state.display_width; pixel++)
+            {
+                const int position = pixel + index * self->state.display_width;
+                const int otherPosition = pixel + (index - amount) * self->state.display_width;
+                bool value = bitset_get(&self->display_memory, otherPosition);
+                if(value)
+                    bitset_set(&self->display_memory, position);
+                else
+                    bitset_reset(&self->display_memory, position);
+                bitset_reset(&self->display_memory, otherPosition);
+            }
+        }
+        break;
+    case CHIP8_SCROLL_LEFT:
+        for(uint8_t index = 0; index < self->state.display_height; index++)
+        {
+            for(uint8_t pixel = 0; pixel < self->state.display_width - amount; pixel++)
+            {
+                const int position = pixel + index * self->state.display_width;
+                const int otherPosition = (pixel + amount) + index * self->state.display_width;
+                bool value = bitset_get(&self->display_memory, otherPosition);
+                if(value)
+                    bitset_set(&self->display_memory, position);
+                else
+                    bitset_reset(&self->display_memory, position);
+                bitset_reset(&self->display_memory, otherPosition);
+            }
+        }
+        break;
+    case CHIP8_SCROLL_RIGHT:
+        for(uint8_t index = 0; index < self->state.display_height; index++)
+        {
+            for(uint8_t pixel = self->state.display_width - 1; pixel >= amount; pixel--)
+            {
+                const int position = pixel + index * self->state.display_width;
+                const int otherPosition = (pixel - amount) + index * self->state.display_width;
+                bool value = bitset_get(&self->display_memory, otherPosition);
+                if(value)
+                    bitset_set(&self->display_memory, position);
+                else
+                    bitset_reset(&self->display_memory, position);
+                bitset_reset(&self->display_memory, otherPosition);
+            }
+        }
+        break;
+    }
+    if(self->threaded)
+        SDL_UnlockRWLock(self->display_lock);
 }
 
 bool draw_sprite(void* arg, uint16_t address, uint8_t x, uint8_t y, uint8_t n)
 {
     cchip8_context_t* const self = arg;
-    x %= self->display_width;
-    y %= self->display_height;
+    x %= self->state.display_width;
+    y %= self->state.display_height;
     bool collision = false;
-    SDL_LockRWLockForWriting(self->display_lock);
-    for(uint16_t index = address; index < address + n; index++)
+    if(self->threaded)
+        SDL_LockRWLockForWriting(self->display_lock);
+    if(self->state.mode == CHIP8_MODE_SCHIP_MODERN && n == 0)   // Wide drawing.
     {
-        const uint8_t byte = self->memory[index];
-        for(uint8_t bit = 0; bit < 8; bit++)
+        n = 0x10;
+        for(uint16_t index = address; index < address + n * 2; index += 2)
         {
-            const uint8_t new_x = x + (7 - bit);
-            const uint8_t new_y = y + (index - address);
-            if(new_x >= self->display_width || new_y >= self->display_height) continue;
-            const int position = new_x + new_y * self->display_width;
-            const bool pixel = (byte & (1 << bit)) != 0;
-            if(pixel == true && bitset_get(&self->display_memory, position) == pixel) collision = true;
-            bitset_xor(&self->display_memory, position, pixel);
+            const uint16_t word = (self->memory[index] << 8) | self->memory[index + 1];
+            for(uint8_t bit = 0; bit < 16; bit++)
+            {
+                const uint8_t new_x = x + (15 - bit);
+                const uint8_t new_y = y + (index - address) / 2;
+                if(new_x >= self->state.display_width || new_y >= self->state.display_height) continue;
+                const int position = new_x + new_y * self->state.display_width;
+                const bool pixel = (word & (1 << bit)) != 0;
+                if(pixel == true && bitset_get(&self->display_memory, position) == pixel) collision = true;
+                bitset_xor(&self->display_memory, position, pixel);
+            }
         }
     }
-    SDL_UnlockRWLock(self->display_lock);
+    else {
+        for(uint16_t index = address; index < address + n; index++)
+        {
+            const uint8_t byte = self->memory[index];
+            for(uint8_t bit = 0; bit < 8; bit++)
+            {
+                const uint8_t new_x = x + (7 - bit);
+                const uint8_t new_y = y + (index - address);
+                if(new_x >= self->state.display_width || new_y >= self->state.display_height) continue;
+                const int position = new_x + new_y * self->state.display_width;
+                const bool pixel = (byte & (1 << bit)) != 0;
+                if(pixel == true && bitset_get(&self->display_memory, position) == pixel) collision = true;
+                bitset_xor(&self->display_memory, position, pixel);
+            }
+        }
+    }
+    if(self->threaded)
+        SDL_UnlockRWLock(self->display_lock);
     return collision;
 }
 
@@ -91,10 +178,11 @@ void cchip8_init(cchip8_context_t* self)
     self->state.get_random = get_random;
     self->state.resize = resize_screen;
     self->state.get_key_status = no_key;
+    self->state.scroll = scroll_screen;
     self->state.aux_arg = self;
     
-    self->display_width = 64;
-    self->display_height = 32;
+    self->state.display_width = 64;
+    self->state.display_height = 32;
     bitset_init(&self->display_memory, 64 * 32);
     self->display_lock = SDL_CreateRWLock();
 
@@ -103,6 +191,7 @@ void cchip8_init(cchip8_context_t* self)
     self->cpu.interpreter.running = true;
     self->cpu.interpreter.state = &self->state;
     self->speed = -1;
+    self->threaded = false;
 
     const uint8_t FONTSET_SIZE = 80;
     static const uint8_t FONTSET[80] = { 

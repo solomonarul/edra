@@ -2,6 +2,24 @@
 #include <auxum/file/ini.h>
 #include <drivers/chip8.h>
 
+static bool get_key_status(void* arg, uint8_t key)
+{
+    UNUSED(arg);
+    static SDL_Scancode keys[0x10] = {
+        SDL_SCANCODE_X,
+        SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3,
+        SDL_SCANCODE_Q, SDL_SCANCODE_W, SDL_SCANCODE_E,
+        SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D,
+        SDL_SCANCODE_Z,
+        SDL_SCANCODE_C, SDL_SCANCODE_4, SDL_SCANCODE_R, SDL_SCANCODE_F,
+        SDL_SCANCODE_V,
+    };
+    static int keyboard_state_length;
+    static const bool* keyboard_state;
+    keyboard_state = SDL_GetKeyboardState(&keyboard_state_length);
+    return keyboard_state[keys[key]];
+}
+
 static void show_error(char* const error)
 {
     fprintf(stderr, "[EROR] %s\n", error);
@@ -50,6 +68,7 @@ int main(int argc, char* argv[])
         show_sdl_error("Could not initialize SDL3! ");
 #ifdef BUILD_TYPE_VITA
     SDL_Window* window = SDL_CreateWindow("cchip8", 960, 544, 0);
+    freopen("ux0:data/edra/last.log", "w", stdout); 
 #else
     SDL_Window* window = SDL_CreateWindow("cchip8", 640, 320, SDL_WINDOW_RESIZABLE);
 #endif
@@ -66,14 +85,17 @@ int main(int argc, char* argv[])
 
     cchip8_context_t self;
     cchip8_init(&self);
-    /*FILE* rom = fopen("./roms/chip8/hires/Hires Particle Demo [zeroZshadow, 2008].ch8", "rb");
+    self.state.get_key_status = get_key_status;
+    self.speed = 600;
+    /*FILE* rom = fopen("./roms/chip8/timendus/8-scrolling.ch8", "rb");
     if(rom == NULL)
     {
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         show_error("CHIP8 ROM file does not exist!");
     }
-    fread(self.memory + 0x200, sizeof(uint8_t), 0x1000 - self.state.pc, rom);*/
+    fread(self.memory + 0x200, sizeof(uint8_t), 0x1000 - self.state.pc, rom);
+    self.state.mode = CHIP8_MODE_SCHIP_MODERN;*/
     uint8_t norom[62] =
     {
         0x61, 0x0e, 0x62, 0x0d, 0xa2, 0x22, 0xd1, 0x27, 
@@ -96,13 +118,14 @@ int main(int argc, char* argv[])
         SDL_DestroyWindow(window);
         show_sdl_error("Could not create CHIP8 emulator thread!");
     }
+    self.threaded = true;
 
     // Main loop.
     SDL_Event event;
     bool app_running = true;
     while(app_running)  // No need to sync here, running one frame more than the CPU can't hurt.
     {
-        SDL_SetRenderLogicalPresentation(renderer, self.display_width, self.display_height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+        SDL_SetRenderLogicalPresentation(renderer, self.state.display_width, self.state.display_height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
         while(SDL_PollEvent(&event))
         {
@@ -120,9 +143,9 @@ int main(int argc, char* argv[])
         SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
         
         SDL_LockRWLockForReading(self.display_lock);
-        for(uint8_t x = 0; x < self.display_width; x++)
-            for(uint8_t y = 0; y < self.display_height; y++)
-                if(bitset_get(&self.display_memory, x + y * self.display_width))
+        for(uint8_t x = 0; x < self.state.display_width; x++)
+            for(uint8_t y = 0; y < self.state.display_height; y++)
+                if(bitset_get(&self.display_memory, x + y * self.state.display_width))
                     SDL_RenderPoint(renderer, x, y);
         SDL_UnlockRWLock(self.display_lock);
         SDL_RenderPresent(renderer);
