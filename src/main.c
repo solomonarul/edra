@@ -1,6 +1,7 @@
 #include <auxum/std.h>
 #include <auxum/file/ini.h>
 #include <drivers/chip8.h>
+#include <stdlib.h>
 
 static void show_error(char* const error)
 {
@@ -50,7 +51,7 @@ int main(int argc, char* argv[])
     cchip8_init(&self);
     self.state.get_key_status = cchip8_get_sdl_key_status;
     self.speed = 6000;
-    FILE* rom = fopen("./roms/chip8/schip/games/octogon.ch8", "rb");
+    /*FILE* rom = fopen("./roms/chip8/schip/games/octogon.ch8", "rb");
     if(rom == NULL)
     {
         SDL_DestroyRenderer(renderer);
@@ -58,8 +59,8 @@ int main(int argc, char* argv[])
         show_error("CHIP8 ROM file does not exist!");
     }
     fread(self.memory + 0x200, sizeof(uint8_t), 0x1000 - self.state.pc, rom);
-    self.state.mode = CHIP8_MODE_SCHIP_MODERN;
-    /*uint8_t norom[62] =
+    self.state.mode = CHIP8_MODE_SCHIP_MODERN;*/
+    uint8_t norom[62] =
     {
         0x61, 0x0e, 0x62, 0x0d, 0xa2, 0x22, 0xd1, 0x27, 
         0x71, 0x08, 0xa2, 0x29, 0xd1, 0x27, 0x71, 0x0a, 
@@ -70,7 +71,7 @@ int main(int argc, char* argv[])
         0xf0, 0x88, 0x88, 0x88, 0xd0, 0xa0, 0x90, 0x00, 
         0x00, 0x88, 0xd8, 0xa8, 0x88, 0x88, 
     };
-    memcpy(self.memory + 0x200, norom, 62 * sizeof(uint8_t));*/
+    memcpy(self.memory + 0x200, norom, 62 * sizeof(uint8_t));
 
     // Create CPU thread.
     SDL_Thread* cpu_thread = SDL_CreateThread(cchip8_cpu_thread_function, "c8 cpu thr", &self);
