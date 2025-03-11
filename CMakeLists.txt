@@ -53,7 +53,7 @@ target_compile_definitions(
 )
 
 if(NOT "${SDL3_PATH}" STREQUAL "")
-find_package(SDL3 REQUIRED PATHS ${SDL2_PATH})
+find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
 else()
 find_package(SDL3 REQUIRED)
 endif()
