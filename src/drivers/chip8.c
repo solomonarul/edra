@@ -213,6 +213,7 @@ void cchip8_init(cchip8_context_t* self)
         0xF0, 0x80, 0xF0, 0x80, 0x80  // F
     };  // TODO: make this modifiable from outside?
 
+    // TODO: maybe this shouldn't be copied unless in SCHIP mode.
     static const uint8_t HIRES_FONTSET_SIZE = 80;
     static const uint16_t HIRES_FONTSET[80] = {
         0xC67C, 0xDECE, 0xF6D6, 0xC6E6, 0x007C, // 0
@@ -233,7 +234,7 @@ void cchip8_init(cchip8_context_t* self)
         0x66FE, 0x6462, 0x647C, 0x6060, 0x00F0 // F
     };
     memcpy((char*)(self->memory + self->state.lowres_font_address), FONTSET, sizeof(uint8_t) * FONTSET_SIZE);
-    memcpy((char*)(self->memory + self->state.hires_font_address), HIRES_FONTSET, sizeof(uint8_t) * HIRES_FONTSET_SIZE); // TODO: maybe this shouldn't be copied unless in SCHIP mode.
+    memcpy((char*)(self->memory + self->state.hires_font_address), HIRES_FONTSET, sizeof(uint8_t) * HIRES_FONTSET_SIZE);
 }
 
 #define THREAD_NANOS (SDL_GetPerformanceCounter() * 1.0 / SDL_GetPerformanceFrequency() * SDL_NS_PER_SECOND)
@@ -260,4 +261,58 @@ void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
             start_time += SDL_NS_PER_SECOND / self->speed;
         }
     }
+}
+
+void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer)
+{
+    SDL_SetRenderLogicalPresentation(renderer, self->state.display_width, self->state.display_height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+
+    SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    
+    SDL_LockRWLockForReading(self->display_lock);
+    for(uint8_t x = 0; x < self->state.display_width; x++)
+        for(uint8_t y = 0; y < self->state.display_height; y++)
+            if(bitset_get(&self->display_memory, x + y * self->state.display_width))
+                SDL_RenderPoint(renderer, x, y);
+    SDL_UnlockRWLock(self->display_lock);
+}
+
+bool cchip8_get_sdl_key_status(void* arg, uint8_t key)
+{
+    UNUSED(arg);
+    static SDL_Scancode keys[0x10] = {
+        SDL_SCANCODE_X,
+        SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3,
+        SDL_SCANCODE_Q, SDL_SCANCODE_W, SDL_SCANCODE_E,
+        SDL_SCANCODE_A, SDL_SCANCODE_S, SDL_SCANCODE_D,
+        SDL_SCANCODE_Z,
+        SDL_SCANCODE_C, SDL_SCANCODE_4, SDL_SCANCODE_R, SDL_SCANCODE_F,
+        SDL_SCANCODE_V,
+    };
+    static int keyboard_state_length;
+    static const bool* keyboard_state;
+    keyboard_state = SDL_GetKeyboardState(&keyboard_state_length);
+    return keyboard_state[keys[key]];
+}
+
+int cchip8_cpu_thread_function(void* args)
+{
+    cchip8_context_t* const self = args;
+    while(true)
+    {
+        if(self->speed != (uint32_t)-1)
+        {
+            cchip8_step(self, 75);
+            SDL_DelayNS(SDL_NS_PER_SECOND / 75);
+        }
+        else
+            cchip8_step(self, SDL_NS_PER_SECOND);
+
+        if(!self->cpu.interpreter.running) break;
+    }
+    fprintf(stdout, "[CHP8] Emulator has stopped.\n");
+    return 0;
 }

@@ -24,5 +24,8 @@ typedef struct cchip8_context cchip8_context_t;
 void cchip8_init(cchip8_context_t* self);
 void cchip8_free(cchip8_context_t* self);
 void cchip8_step(cchip8_context_t* self, uint32_t update_rate);
+void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer);
+bool cchip8_get_sdl_key_status(void* arg, uint8_t key);
+int cchip8_cpu_thread_function(void* args);
 
 #endif
