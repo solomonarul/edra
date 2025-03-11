@@ -11,7 +11,8 @@
 - make r for an automated run.
 
 ### Running details:
-- read [this](./roms/README.md).
+- ~~read [this](./roms/README.md)~~ invalid until new UI.
+- when cloning also clone the submodules.
 
 ## Part of this project:
 - [auxum](https://github.com/solomonarul/auxum), an utility library.

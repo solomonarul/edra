@@ -53,7 +53,7 @@ target_compile_definitions(
 )
 
 if(NOT "${SDL3_PATH}" STREQUAL "")
-find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
+find_package(SDL3 REQUIRED PATHS ${SDL2_PATH})
 else()
 find_package(SDL3 REQUIRED)
 endif()
@@ -91,6 +91,7 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
         VERSION ${VITA_VERSION}
         NAME ${VITA_APP_NAME}
         FILE vita-metadata sce_sys
+        FILE vita-module module
     )
 else()
     install(TARGETS ${PROJECT_NAME})

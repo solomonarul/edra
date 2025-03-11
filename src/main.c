@@ -26,15 +26,25 @@ int main(int argc, char* argv[])
     UNUSED(show_error);
     UNUSED(argc);
     UNUSED(argv);
-
+#ifdef BUILD_TYPE_VITA
+    SDL_SetHint(SDL_HINT_VITA_PVR_OPENGL, "true");
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,8);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
+#endif
     // Init SDL subsystem.
     if(!SDL_Init(SDL_INIT_VIDEO))
-        show_sdl_error("Could not initialize SDL3! ");
+        show_sdl_error("Could not initialize SDL3 video subsystem! ");
 #ifdef BUILD_TYPE_VITA
-    SDL_Window* window = SDL_CreateWindow("cchip8", 960, 544, SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS);
-    freopen("ux0:data/edra/last.log", "w", stdout); 
+    SDL_Window* window = SDL_CreateWindow("cchip8", 960, 544, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS);
 #else
-    SDL_Window* window = SDL_CreateWindow("cchip8", 640, 320, SDL_WINDOW_RESIZABLE);
+    SDL_Window* window = SDL_CreateWindow("cchip8", 640, 320, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 #endif
     if(window == NULL)
         show_sdl_error("Could not create SDL3 window! ");
