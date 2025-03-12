@@ -27,7 +27,7 @@ int _newlib_heap_size_user   = 100 * 1024 * 1024;   // 100MB VITASDK heap.
 unsigned int sceLibcHeapSize = 10 * 1024 * 1024;    // 10MB SCELibC heap.
 #endif
 
-void cchip8_draw_gl(cchip8_context_t* self)
+void cchip8_draw_gl(cchip8_context_t* self, int window_x, int window_y)
 {
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -35,7 +35,7 @@ void cchip8_draw_gl(cchip8_context_t* self)
     SDL_LockRWLockForReading(self->display_lock);
     glBegin(GL_QUADS);
     glColor3f(1.0f, 1.0f, 1.0f);
-    int size_x = (640 / self->state.display_width), size_y = (320 / self->state.display_height);
+    int size_x = (window_x / self->state.display_width), size_y = (window_y / self->state.display_height);
     for(uint8_t x = 0; x < self->state.display_width; x++)
         for(uint8_t y = 0; y < self->state.display_height; y++)
             if(bitset_get(&self->display_memory, x + y * self->state.display_width))
@@ -72,8 +72,10 @@ int main(int argc, char* argv[])
         show_sdl_error("Could not initialize SDL3 video subsystem! ");
 #ifdef BUILD_TYPE_VITA
     SDL_Window* window = SDL_CreateWindow("Edra", 960, 544, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS);
+    int window_x = 960, window_y = 544;
 #else
     SDL_Window* window = SDL_CreateWindow("Edra", 640, 320, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    int window_x = 640, window_y = 320;
 #endif
     if(window == NULL)
         show_sdl_error("Could not create SDL3 window! ");
@@ -135,17 +137,21 @@ int main(int argc, char* argv[])
             case SDL_EVENT_QUIT:
                 app_running = false;
                 break;
+            case SDL_EVENT_WINDOW_RESIZED:
+                window_x = event.window.data1;
+                window_y = event.window.data2;
+                break;
             }
         }
 
         // cchip8_draw_sdl(&self, renderer);
-        glViewport(0, 0, 640, 320);
+        glViewport(0, 0, window_x, window_y);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(0.0, 640.0, 320.0, 0.0, -1.0, 1.0);  // 2D orthogonal projection
+        glOrtho(0.0, window_x * 1.0, window_y * 1.0, 0.0, -1.0, 1.0);  // 2D orthogonal projection
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        cchip8_draw_gl(&self);
+        cchip8_draw_gl(&self, window_x, window_y);
         SDL_GL_SwapWindow(window);
     }
 
