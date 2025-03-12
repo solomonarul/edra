@@ -63,6 +63,7 @@ target_link_libraries(
         auxum
         cchip8
         SDL3::SDL3
+        
 )
 
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
@@ -79,8 +80,15 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
     
     include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
 
+    set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")    # More total memory.
+    target_link_libraries(
+        ${PROJECT_NAME}
+        PUBLIC
+            libGL_stub
+    )
+
     ## Create Vita files
-    vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME})
+    vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
 
     # The FILE directive lets you add additional files to the VPK, the syntax is
     # FILE src_path dst_path_in_vpk. In this case, we add the LiveArea paths.
@@ -94,5 +102,11 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
         FILE vita-module module
     )
 else()
+    find_package(OpenGL CONFIG REQUIRED)
+    target_link_libraries(
+        ${PROJECT_NAME}
+        PUBLIC
+            GL
+    )
     install(TARGETS ${PROJECT_NAME})
 endif()

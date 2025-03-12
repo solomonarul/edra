@@ -13,7 +13,6 @@ struct cchip8_context {
     bitset_t display_memory;
     SDL_RWLock* display_lock;
     uint32_t speed;
-    dynarray_t key_mappings[0x10];
     union {
         chip8_interpreter_t interpreter;
     } cpu;

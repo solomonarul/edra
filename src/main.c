@@ -2,6 +2,10 @@
 #include <auxum/file/ini.h>
 #include <drivers/chip8.h>
 #include <stdlib.h>
+#ifdef BUILD_TYPE_VITA
+#define __psp2__
+#include <GL/gl.h>
+#endif
 
 static void show_error(char* const error)
 {
@@ -21,6 +25,11 @@ static void show_sdl_error(char* const error)
     exit(-1);
 }
 
+#ifdef BUILD_TYPE_VITA
+int _newlib_heap_size_user   = 100 * 1024 * 1024;   // 100MB VITASDK heap.
+unsigned int sceLibcHeapSize = 10 * 1024 * 1024;    // 10MB SCELibC heap.
+#endif
+
 int main(int argc, char* argv[])
 {
     UNUSED(show_error);
@@ -28,17 +37,18 @@ int main(int argc, char* argv[])
     UNUSED(argv);
 #ifdef BUILD_TYPE_VITA
     SDL_SetHint(SDL_HINT_VITA_PVR_OPENGL, "true");
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE,8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE,8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE,8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE,8);
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 24);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER,1);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 #endif
     // Init SDL subsystem.
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+
     if(!SDL_Init(SDL_INIT_VIDEO))
         show_sdl_error("Could not initialize SDL3 video subsystem! ");
 #ifdef BUILD_TYPE_VITA
@@ -49,13 +59,13 @@ int main(int argc, char* argv[])
     if(window == NULL)
         show_sdl_error("Could not create SDL3 window! ");
 
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
-    if(renderer == NULL)
+    SDL_GLContext glContext = SDL_GL_CreateContext(window);
+    if(glContext == NULL)
     {
         SDL_DestroyWindow(window);
-        show_sdl_error("Could not create SDL3 renderer! ");
+        show_sdl_error("Could not create SDL3 GL context! ");
     }
-    SDL_SetRenderVSync(renderer, 1);
+    SDL_GL_MakeCurrent(window, glContext);
 
     cchip8_context_t self;
     cchip8_init(&self);
@@ -88,7 +98,7 @@ int main(int argc, char* argv[])
     if(cpu_thread == NULL)
     {
         cchip8_free(&self);
-        SDL_DestroyRenderer(renderer);
+        SDL_GL_DestroyContext(glContext);
         SDL_DestroyWindow(window);
         show_sdl_error("Could not create CHIP8 emulator thread!");
     }
@@ -109,15 +119,18 @@ int main(int argc, char* argv[])
             }
         }
 
-        cchip8_draw_sdl(&self, renderer);
-        SDL_RenderPresent(renderer);
+        // cchip8_draw_sdl(&self, renderer);
+        glViewport(0, 0, 960, 540);
+        glClearColor(1.f, 0.f, 1.f, 0.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        SDL_GL_SwapWindow(window);
     }
 
     self.cpu.interpreter.running = false;
     SDL_WaitThread(cpu_thread, NULL); 
 
     cchip8_free(&self);
-    SDL_DestroyRenderer(renderer);
+    SDL_GL_DestroyContext(glContext);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;

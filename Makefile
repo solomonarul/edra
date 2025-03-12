@@ -14,11 +14,11 @@ c:
 
 bud:
 	@cmake -B build -S . --preset unix-debug
-	@cmake --build build
+	@cmake --build build -j${nproc}
 
 bur:
 	@cmake -B build -S . --preset unix-release
-	@cmake --build build
+	@cmake --build build -j${nproc}
 
 bwd:
 	@cmake -B build -S . --preset windows-debug
@@ -30,13 +30,13 @@ bwr:
 
 bvd:
 	@cmake -B build -S . --preset vita-debug
-	@cmake --build build
+	@cmake --build build -j${nproc}
 	@mkdir -p bin
 	@cp build/edra.vpk bin/edra.vpk
 
 bvr:
 	@cmake -B build -S . --preset vita-release
-	@cmake --build build
+	@cmake --build build -j${nproc}
 	@mkdir -p bin
 	@cp build/edra.vpk bin/edra.vpk
 
