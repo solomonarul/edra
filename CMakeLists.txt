@@ -29,11 +29,7 @@ add_executable(
     ${${PROJECT_NAME}_SRC}
 )
 
-if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
-else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
-endif()
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 set_property(
     TARGET ${PROJECT_NAME}
@@ -63,29 +59,22 @@ target_link_libraries(
         auxum
         cchip8
         SDL3::SDL3
-        
 )
 
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
-    ## Configuration options for this app
-    # Display name (under bubble in LiveArea)
-    set(VITA_APP_NAME "Edra")
-
-    # Unique ID must be exactly 9 characters. Recommended: XXXXYYYYY where X =
-    # unique string of developer and Y = a unique number for this app
-    set(VITA_TITLEID  "SLMN00000")
-
-    # Optional version string to show in LiveArea's more info screen
-    set(VITA_VERSION  "01.00")
-    
-    include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
-
-    set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")    # More total memory.
     target_link_libraries(
         ${PROJECT_NAME}
         PUBLIC
             libGL_stub
     )
+
+    ## Configuration options for this app
+    set(VITA_APP_NAME "Edra")                                           # Display name.
+    set(VITA_TITLEID  "SLMN00000")                                      # Unique ID must be exactly 9 characters. Recommended: XXXXYYYYY
+    set(VITA_VERSION  "01.00")                                          # Shown in LiveArea's more info screen.
+    set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")    # +109 MB of RAM, system apps are not allowed to run alongside.
+
+    include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
 
     ## Create Vita files
     vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE)
@@ -101,8 +90,14 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
         FILE vita-metadata sce_sys
         FILE vita-module module
     )
+elseif(CMAKE_BUILD_PLATFORM MATCHES "WINDOWS")
+    target_link_libraries(
+        ${PROJECT_NAME}
+        PUBLIC
+            opengl32
+    )
+    install(TARGETS ${PROJECT_NAME})
 else()
-    find_package(OpenGL CONFIG REQUIRED)
     target_link_libraries(
         ${PROJECT_NAME}
         PUBLIC

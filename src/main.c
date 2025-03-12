@@ -2,10 +2,7 @@
 #include <auxum/file/ini.h>
 #include <drivers/chip8.h>
 #include <stdlib.h>
-#ifdef BUILD_TYPE_VITA
-#define __psp2__
 #include <GL/gl.h>
-#endif
 
 static void show_error(char* const error)
 {
@@ -52,9 +49,9 @@ int main(int argc, char* argv[])
     if(!SDL_Init(SDL_INIT_VIDEO))
         show_sdl_error("Could not initialize SDL3 video subsystem! ");
 #ifdef BUILD_TYPE_VITA
-    SDL_Window* window = SDL_CreateWindow("cchip8", 960, 544, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS);
+    SDL_Window* window = SDL_CreateWindow("Edra", 960, 544, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS);
 #else
-    SDL_Window* window = SDL_CreateWindow("cchip8", 640, 320, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    SDL_Window* window = SDL_CreateWindow("Edra", 640, 320, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 #endif
     if(window == NULL)
         show_sdl_error("Could not create SDL3 window! ");
