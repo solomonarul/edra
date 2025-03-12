@@ -27,6 +27,28 @@ int _newlib_heap_size_user   = 100 * 1024 * 1024;   // 100MB VITASDK heap.
 unsigned int sceLibcHeapSize = 10 * 1024 * 1024;    // 10MB SCELibC heap.
 #endif
 
+void cchip8_draw_gl(cchip8_context_t* self)
+{
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    SDL_LockRWLockForReading(self->display_lock);
+    glBegin(GL_QUADS);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    int size_x = (640 / self->state.display_width), size_y = (320 / self->state.display_height);
+    for(uint8_t x = 0; x < self->state.display_width; x++)
+        for(uint8_t y = 0; y < self->state.display_height; y++)
+            if(bitset_get(&self->display_memory, x + y * self->state.display_width))
+            {
+                glVertex2f(x * size_x, y * size_y);
+                glVertex2f((x + 1) * size_x, y * size_y);
+                glVertex2f((x + 1) * size_x, (y + 1) * size_y);
+                glVertex2f(x * size_x, (y + 1) * size_y);
+            }
+    glEnd();
+    SDL_UnlockRWLock(self->display_lock);
+}
+
 int main(int argc, char* argv[])
 {
     UNUSED(show_error);
@@ -117,9 +139,13 @@ int main(int argc, char* argv[])
         }
 
         // cchip8_draw_sdl(&self, renderer);
-        glViewport(0, 0, 960, 540);
-        glClearColor(1.f, 0.f, 1.f, 0.f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glViewport(0, 0, 640, 320);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0.0, 640.0, 320.0, 0.0, -1.0, 1.0);  // 2D orthogonal projection
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        cchip8_draw_gl(&self);
         SDL_GL_SwapWindow(window);
     }
 
