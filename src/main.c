@@ -161,6 +161,7 @@ int main(int argc, char* argv[])
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         cchip8_draw_gl(&self, window_x, window_y);
+        glFlush();
         SDL_GL_SwapWindow(window);
         // SDL_RenderPresent(renderer);
     }
