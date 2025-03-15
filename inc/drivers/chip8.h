@@ -6,6 +6,7 @@
 #include <cchip8/state.h>
 #include <cchip8/cpu/interpreter.h>
 #include <SDL3/SDL.h>
+#include <GL/GL.h>
 
 struct cchip8_context {
     bool threaded;
@@ -24,6 +25,7 @@ void cchip8_init(cchip8_context_t* self);
 void cchip8_free(cchip8_context_t* self);
 void cchip8_step(cchip8_context_t* self, uint32_t update_rate);
 void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer);
+void cchip8_draw_gl(cchip8_context_t* self, int window_x, int window_y);
 bool cchip8_get_sdl_key_status(void* arg, uint8_t key);
 int cchip8_cpu_thread_function(void* args);
 

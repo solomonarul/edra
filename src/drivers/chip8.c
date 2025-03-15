@@ -267,7 +267,7 @@ void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer)
 {
     SDL_SetRenderLogicalPresentation(renderer, self->state.display_width, self->state.display_height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
-    SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
+    SDL_SetRenderDrawColor(renderer, 25, 25, 25, 255);
     SDL_RenderClear(renderer);
 
     SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
@@ -278,6 +278,29 @@ void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer)
             if(bitset_get(&self->display_memory, x + y * self->state.display_width))
                 SDL_RenderPoint(renderer, x, y);
     SDL_UnlockRWLock(self->display_lock);
+}
+
+void cchip8_draw_gl(cchip8_context_t* self, int window_x, int window_y)
+{
+    glClearColor(0.1f, 0.1f, 0.1f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    SDL_LockRWLockForReading(self->display_lock);
+    int size_x = (window_x / self->state.display_width), size_y = (window_y / self->state.display_height);
+    for(uint8_t x = 0; x < self->state.display_width; x++)
+        for(uint8_t y = 0; y < self->state.display_height; y++)
+            if(bitset_get(&self->display_memory, x + y * self->state.display_width))
+            {
+                glColor3f(1.0f, 1.0f, 1.0f);
+                glBegin(GL_QUADS);
+                glVertex2f(x * size_x, y * size_y);
+                glVertex2f((x + 1) * size_x, y * size_y);
+                glVertex2f((x + 1) * size_x, (y + 1) * size_y);
+                glVertex2f(x * size_x, (y + 1) * size_y);
+                glEnd();
+            }
+    SDL_UnlockRWLock(self->display_lock);
+    glFlush();
 }
 
 bool cchip8_get_sdl_key_status(void* arg, uint8_t key)
