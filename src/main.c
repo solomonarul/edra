@@ -47,6 +47,7 @@ void cchip8_draw_gl(cchip8_context_t* self, int window_x, int window_y)
                 glEnd();
             }
     SDL_UnlockRWLock(self->display_lock);
+    glFlush();
 }
 
 int main(int argc, char* argv[])
@@ -161,7 +162,6 @@ int main(int argc, char* argv[])
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         cchip8_draw_gl(&self, window_x, window_y);
-        glFlush();
         SDL_GL_SwapWindow(window);
         // SDL_RenderPresent(renderer);
     }
