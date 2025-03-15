@@ -6,7 +6,6 @@
 #include <cchip8/state.h>
 #include <cchip8/cpu/interpreter.h>
 #include <SDL3/SDL.h>
-#include <GL/GL.h>
 
 struct cchip8_context {
     bool threaded;

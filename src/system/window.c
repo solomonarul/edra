@@ -31,11 +31,7 @@ maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_d
         return result;
     }
 
-#ifdef BUILD_TYPE_VITA
-    self->window = SDL_CreateWindow(NULL, 960, 544, args | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS | init_data->flags);
-#else
     self->sdl = SDL_CreateWindow(init_data->name, init_data->size_x, init_data->size_y, args | init_data->flags);
-#endif
     if(self->sdl == NULL)
     {
         result.ok = false;

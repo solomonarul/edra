@@ -72,7 +72,7 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
     set(VITA_APP_NAME "Edra")                                           # Display name.
     set(VITA_TITLEID  "SLMN00000")                                      # Unique ID must be exactly 9 characters. Recommended: XXXXYYYYY
     set(VITA_VERSION  "01.00")                                          # Shown in LiveArea's more info screen.
-    set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")    # +109 MB of RAM, system apps are not allowed to run alongside.
+    # set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12")    # +109 MB of RAM, system apps are not allowed to run alongside.
 
     include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
 

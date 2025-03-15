@@ -1,6 +1,8 @@
 #include "drivers/chip8.h"
 #include <auxum/std.h>
 #include <stdlib.h>
+#include <SDL3/SDL.h>
+#include <GL/gl.h>
 
 static uint8_t memory_read_b(void* arg, uint16_t address)
 {

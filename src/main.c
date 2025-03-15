@@ -25,6 +25,12 @@ static void show_sdl_error(char* const error)
     exit(-1);
 }
 
+#ifdef BUILD_TYPE_VITA
+#define VITA_NEWLIB_HEAP_SIZE (1 * MB)
+#define VITA_SCELIBC_HEAP_SIZE (1 * MB)
+#include <auxum/platform/vita/heap.h>
+#endif
+
 int main(int argc, char* argv[])
 {
     UNUSED(argc);
@@ -36,7 +42,7 @@ int main(int argc, char* argv[])
     #ifdef BUILD_TYPE_VITA
         .size_x = 960,
         .size_y = 544,
-        .flags = 0,
+        .flags = SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS,
     #else
         .size_x = 640,
         .size_y = 320,
@@ -116,6 +122,7 @@ int main(int argc, char* argv[])
             break;
 
         case APP_RENDER_TYPE_GL:
+        {
             glViewport(0, 0, window_x, window_y);
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
@@ -125,6 +132,7 @@ int main(int argc, char* argv[])
             cchip8_draw_gl(&emulator, window_x, window_y);
             SDL_GL_SwapWindow(window.sdl);
             break;
+        }
 
         default:
             break;
