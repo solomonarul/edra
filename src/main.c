@@ -33,19 +33,19 @@ void cchip8_draw_gl(cchip8_context_t* self, int window_x, int window_y)
     glClear(GL_COLOR_BUFFER_BIT);
 
     SDL_LockRWLockForReading(self->display_lock);
-    glBegin(GL_QUADS);
-    glColor3f(1.0f, 1.0f, 1.0f);
     int size_x = (window_x / self->state.display_width), size_y = (window_y / self->state.display_height);
     for(uint8_t x = 0; x < self->state.display_width; x++)
         for(uint8_t y = 0; y < self->state.display_height; y++)
             if(bitset_get(&self->display_memory, x + y * self->state.display_width))
             {
+                glColor3f(1.0f, 1.0f, 1.0f);
+                glBegin(GL_QUADS);
                 glVertex2f(x * size_x, y * size_y);
                 glVertex2f((x + 1) * size_x, y * size_y);
                 glVertex2f((x + 1) * size_x, (y + 1) * size_y);
                 glVertex2f(x * size_x, (y + 1) * size_y);
+                glEnd();
             }
-    glEnd();
     SDL_UnlockRWLock(self->display_lock);
 }
 
@@ -73,9 +73,11 @@ int main(int argc, char* argv[])
 #ifdef BUILD_TYPE_VITA
     SDL_Window* window = SDL_CreateWindow("Edra", 960, 544, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS);
     int window_x = 960, window_y = 544;
+    UNUSED(window_x), UNUSED(window_y);
 #else
     SDL_Window* window = SDL_CreateWindow("Edra", 640, 320, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     int window_x = 640, window_y = 320;
+    UNUSED(window_x), UNUSED(window_y);
 #endif
     if(window == NULL)
         show_sdl_error("Could not create SDL3 window! ");
@@ -87,6 +89,12 @@ int main(int argc, char* argv[])
         show_sdl_error("Could not create SDL3 GL context! ");
     }
     SDL_GL_MakeCurrent(window, glContext);
+    /*SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
+    if(renderer == NULL)
+    {
+        SDL_DestroyWindow(window);
+        show_sdl_error("Could not create SDL3 renderer! ");
+    }*/
 
     cchip8_context_t self;
     cchip8_init(&self);
@@ -119,6 +127,7 @@ int main(int argc, char* argv[])
     if(cpu_thread == NULL)
     {
         cchip8_free(&self);
+        // SDL_DestroyRenderer(renderer);
         SDL_GL_DestroyContext(glContext);
         SDL_DestroyWindow(window);
         show_sdl_error("Could not create CHIP8 emulator thread!");
@@ -153,6 +162,7 @@ int main(int argc, char* argv[])
         glLoadIdentity();
         cchip8_draw_gl(&self, window_x, window_y);
         SDL_GL_SwapWindow(window);
+        // SDL_RenderPresent(renderer);
     }
 
     self.cpu.interpreter.running = false;
@@ -160,6 +170,7 @@ int main(int argc, char* argv[])
 
     cchip8_free(&self);
     SDL_GL_DestroyContext(glContext);
+    // SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
