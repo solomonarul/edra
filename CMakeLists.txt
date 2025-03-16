@@ -89,6 +89,7 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
         NAME ${VITA_APP_NAME}
         FILE vita-metadata sce_sys
         FILE vita-module module
+        FILE assets assets
     )
 elseif(CMAKE_BUILD_PLATFORM MATCHES "WINDOWS")
     target_link_libraries(

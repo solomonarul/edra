@@ -15,18 +15,22 @@ c:
 bud:
 	@cmake -B build -S . --preset unix-debug
 	@cmake --build build -j${nproc}
+	@cmake -E copy_directory assets ./bin/assets
 
 bur:
 	@cmake -B build -S . --preset unix-release
 	@cmake --build build -j${nproc}
+	@cmake -E copy_directory assets ./bin/assets
 
 bwd:
 	@cmake -B build -S . --preset windows-debug
 	@cmake --build build
+	@cmake -E copy_directory assets ./bin/assets
 
 bwr:
 	@cmake -B build -S . --preset windows-release
 	@cmake --build build
+	@cmake -E copy_directory assets ./bin/assets
 
 bvd:
 	@cmake -B build -S . --preset vita-debug
