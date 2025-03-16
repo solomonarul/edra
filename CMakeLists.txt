@@ -65,7 +65,7 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
     target_link_libraries(
         ${PROJECT_NAME}
         PUBLIC
-            libGL_stub
+            libGLESv2_stub
     )
 
     ## Configuration options for this app

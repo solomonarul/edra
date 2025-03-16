@@ -97,6 +97,7 @@ int main(int argc, char* argv[])
     bool app_running = true;
     int window_x, window_y;
     SDL_GetWindowSize(window.sdl, &window_x, &window_y);
+    SDL_GL_SetSwapInterval(1);
     while(app_running)
     {
         while(SDL_PollEvent(&event))
@@ -113,28 +114,11 @@ int main(int argc, char* argv[])
             }
         }
         cchip8_draw_gl(&emulator, window_x, window_y);
+
         glViewport(0, 0, window_x, window_y);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0.0, window_x * 1.0, window_y * 1.0, 0.0, -1.0, 1.0);  // 2D orthogonal projection
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glClearColor(0.1f, 0.1f, 0.1f, 1.f);
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-        glTranslatef(window_x / 2, window_y / 2, 0);
-        glBegin(GL_TRIANGLES);
-            
-            glColor3f(1.0f, 0.0f, 0.0f); // Red color
-            glVertex3f((-0.5f * window_x), (-0.5f * window_y), 0.0f); // Bottom left vertex
-        
-            glColor3f(0.0f, 1.0f, 0.0f); // Green color
-            glVertex3f(( 0.5f * window_x), (-0.5f * window_y), 0.0f); // Bottom right vertex
-        
-            glColor3f(0.0f, 0.0f, 1.0f); // Blue color
-            glVertex3f(( 0.0f * window_x), ( 0.5f * window_y), 0.0f); // Top vertex
-        
-        glEnd();
-        glFlush();
+
         SDL_GL_SwapWindow(window.sdl);
     }
 
