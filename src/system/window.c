@@ -1,6 +1,7 @@
 #include "system/window.h"
 
 #include <auxum/std.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_data)

@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
         app_window_free(&window);
         app_show_sdl_error(result.error, NULL);
     }
+    SDL_SetRenderVSync(window.renderer, 1);
 
     // Create CHIP8 emulator.
     cchip8_context_t emulator;
