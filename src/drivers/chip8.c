@@ -264,37 +264,21 @@ void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
     }
 }
 
-void cchip8_draw_gl(cchip8_context_t* self, int window_x, int window_y)
+void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer)
 {
-    UNUSED(self);
-    UNUSED(window_x);
-    UNUSED(window_y);
-    /*glViewport(0, 0, window_x, window_y);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, window_x * 1.0, window_y * 1.0, 0.0, -1.0, 1.0);  // 2D orthogonal projection
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glClearColor(0.1f, 0.1f, 0.1f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    SDL_SetRenderLogicalPresentation(renderer, self->state.display_width, self->state.display_height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
+    SDL_SetRenderDrawColor(renderer, 25, 25, 25, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    
     SDL_LockRWLockForReading(self->display_lock);
-    glBegin(GL_QUADS);
-    int size_x = (window_x / self->state.display_width), size_y = (window_y / self->state.display_height);
     for(uint8_t x = 0; x < self->state.display_width; x++)
         for(uint8_t y = 0; y < self->state.display_height; y++)
             if(bitset_get(&self->display_memory, x + y * self->state.display_width))
-            {
-                glColor3f(1.0f, 1.0f, 1.0f);
-                glVertex2f(x * size_x, y * size_y);
-                glVertex2f((x + 1) * size_x, y * size_y);
-                glVertex2f((x + 1) * size_x, (y + 1) * size_y);
-                glVertex2f(x * size_x, (y + 1) * size_y);
-            }
+                SDL_RenderPoint(renderer, x, y);
     SDL_UnlockRWLock(self->display_lock);
-    glEnd();
-    glFlush();*/
-    // TODO: opengles 2.0 version
 }
 
 bool cchip8_get_sdl_key_status(void* arg, uint8_t key)

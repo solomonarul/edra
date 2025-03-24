@@ -4,14 +4,9 @@
 
 #include <auxum/std.h>
 #include <SDL3/SDL.h>
-#ifdef BUILD_TYPE_VITA
-#include <SDL3/SDL_opengles2.h>
-#else
-#include <SDL3/SDL_opengl.h>
-#endif
 
 struct app_window {
-    SDL_GLContext context;
+    SDL_Renderer* renderer;
     SDL_Window* sdl;
 };
 typedef struct app_window app_window_t;

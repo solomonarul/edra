@@ -62,12 +62,6 @@ target_link_libraries(
 )
 
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
-    target_link_libraries(
-        ${PROJECT_NAME}
-        PUBLIC
-            libGLESv2_stub
-    )
-
     ## Configuration options for this app
     set(VITA_APP_NAME "Edra")                                           # Display name.
     set(VITA_TITLEID  "SLMN00000")                                      # Unique ID must be exactly 9 characters. Recommended: XXXXYYYYY
@@ -87,22 +81,7 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
         ${PROJECT_NAME}.self
         VERSION ${VITA_VERSION}
         NAME ${VITA_APP_NAME}
-        FILE vita-metadata sce_sys
-        FILE vita-module module
+        FILE platform/vita sce_sys
         FILE assets assets
     )
-elseif(CMAKE_BUILD_PLATFORM MATCHES "WINDOWS")
-    target_link_libraries(
-        ${PROJECT_NAME}
-        PUBLIC
-            opengl32
-    )
-    install(TARGETS ${PROJECT_NAME})
-else()
-    target_link_libraries(
-        ${PROJECT_NAME}
-        PUBLIC
-            GL
-    )
-    install(TARGETS ${PROJECT_NAME})
 endif()

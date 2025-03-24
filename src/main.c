@@ -25,12 +25,6 @@ static void show_sdl_error(char* const error)
     exit(-1);
 }
 
-#ifdef BUILD_TYPE_VITA
-#define VITA_NEWLIB_HEAP_SIZE (1 * MB)
-#define VITA_SCELIBC_HEAP_SIZE (1 * MB)
-#include <auxum/platform/vita/heap.h>
-#endif
-
 int main(int argc, char* argv[])
 {
     UNUSED(argc);
@@ -97,7 +91,6 @@ int main(int argc, char* argv[])
     bool app_running = true;
     int window_x, window_y;
     SDL_GetWindowSize(window.sdl, &window_x, &window_y);
-    SDL_GL_SetSwapInterval(1);
     while(app_running)
     {
         while(SDL_PollEvent(&event))
@@ -113,13 +106,8 @@ int main(int argc, char* argv[])
                 break;
             }
         }
-        cchip8_draw_gl(&emulator, window_x, window_y);
-
-        glViewport(0, 0, window_x, window_y);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        SDL_GL_SwapWindow(window.sdl);
+        cchip8_draw_sdl(&emulator, window.renderer);
+        SDL_RenderPresent(window.renderer);
     }
 
     emulator.cpu.interpreter.running = false;
