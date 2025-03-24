@@ -214,7 +214,7 @@ void cchip8_init(cchip8_context_t* self)
         0xF0, 0x80, 0xF0, 0x80, 0x80  // F
     };  // TODO: make this modifiable from outside?
 
-    // TODO: maybe this shouldn't be copied unless in SCHIP mode.
+    // TODO: maybe this shouldn't be available unless in SCHIP mode.
     static const uint8_t HIRES_FONTSET_SIZE = 80;
     static const uint16_t HIRES_FONTSET[80] = {
         0xC67C, 0xDECE, 0xF6D6, 0xC6E6, 0x007C, // 0

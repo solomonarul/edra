@@ -2,28 +2,6 @@
 #include <auxum/file/ini.h>
 #include "system/window.h"
 #include "drivers/chip8.h"
-#include <stdlib.h>
-
-static void show_error(char* const error)
-{
-    fprintf(stderr, "[EROR] %s\n", error);
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", error, NULL);
-    exit(-1);
-}
-
-static void show_sdl_error(char* const error)
-{
-    if(SDL_GetError() == NULL)
-        show_error(error);
-
-    fprintf(stderr, "[EROR] %s(SDL Error: %s)\n", error, SDL_GetError());
-    int first_length = strlen(error);
-    int second_length = strlen(SDL_GetError());
-    char result[first_length + second_length + 1];
-    string_nconcat(result, error, first_length, (char* const)SDL_GetError(), second_length);
-    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error!", result, NULL);
-    exit(-1);
-}
 
 int main(int argc, char* argv[])
 {
@@ -46,14 +24,14 @@ int main(int argc, char* argv[])
     });
     if(!result.ok) {
         app_window_free(&window);
-        show_sdl_error(result.error);
+        app_show_sdl_error(result.error, NULL);
     }
 
     // Create CHIP8 emulator.
     cchip8_context_t emulator;
     cchip8_init(&emulator);
     emulator.state.get_key_status = cchip8_get_sdl_key_status;
-    emulator.speed = 6000;
+    emulator.speed = 60;
     /*FILE* rom = fopen("./roms/chip8/schip/games/octogon.ch8", "rb");
     if(rom == NULL)
     {
@@ -82,15 +60,13 @@ int main(int argc, char* argv[])
     {
         cchip8_free(&emulator);
         app_window_free(&window);
-        show_sdl_error("Could not create CHIP8 emulator thread!");
+        app_show_sdl_error("Could not create CHIP8 emulator thread!", NULL);
     }
     emulator.threaded = true;
 
     // Main loop.
     SDL_Event event;
     bool app_running = true;
-    int window_x, window_y;
-    SDL_GetWindowSize(window.sdl, &window_x, &window_y);
     while(app_running)
     {
         while(SDL_PollEvent(&event))
@@ -101,8 +77,7 @@ int main(int argc, char* argv[])
                 app_running = false;
                 break;
             case SDL_EVENT_WINDOW_RESIZED:
-                window_x = event.window.data1;
-                window_y = event.window.data2;
+                app_window_on_resize(&window, event.window.data1, event.window.data2);
                 break;
             }
         }

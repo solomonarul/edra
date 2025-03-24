@@ -10,8 +10,14 @@
     - d / r -> debug / release.
 - make r for an automated run.
 
-### Running details:
+### Other details:
 - when cloning also clone the submodules.
+
+## Preview:
+
+<p align="center">
+  <img width="320" height="160" src="./.github/c8_no_rom.png">
+</p>
 
 ## Part of this project:
 - [auxum](https://github.com/solomonarul/auxum), an utility library.
