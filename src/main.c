@@ -1,5 +1,6 @@
 #include <auxum/std.h>
 #include <auxum/file/ini.h>
+#include "system/text.h"
 #include "system/window.h"
 #include "drivers/chip8.h"
 
@@ -7,6 +8,9 @@ int main(int argc, char* argv[])
 {
     UNUSED(argc);
     UNUSED(argv);
+
+    // Set up "logging".
+    freopen("last.log", "w", stdout);
     
     // Create window.
     app_window_t window = {0};
@@ -22,11 +26,31 @@ int main(int argc, char* argv[])
     #endif
         "Edra | cCHIP8 no-rom"
     });
-    if(!result.ok) {
+    if(!IS_OK(result))
+    {
         app_window_free(&window);
         app_show_sdl_error(result.error, NULL);
     }
     SDL_SetRenderVSync(window.renderer, 1);
+
+    // Load font.
+    app_font_t font;
+    result = app_font_init_from_path(&font, "assets/FixedSys302.ttf", 16);
+    if(!IS_OK(result))
+        printf("[WARN] Could not load font at path %s. (SDL Error: %s)\n", "assets/FixedSys302.ttf", SDL_GetError());
+
+    SDL_Color color;
+    color.r = 255;
+    color.g = 255;
+    color.b = 255;
+    color.a = 255;
+    SDL_Surface* text_surface = TTF_RenderText_Solid(font.data, "Hello World!", 0, color);
+    SDL_Texture* text_texture = NULL;
+    if(text_surface != NULL)
+    {
+        text_texture = SDL_CreateTextureFromSurface(window.renderer, text_surface);
+        SDL_DestroySurface(text_surface);
+    }
 
     // Create CHIP8 emulator.
     cchip8_context_t emulator;
@@ -83,6 +107,17 @@ int main(int argc, char* argv[])
             }
         }
         cchip8_draw_sdl(&emulator, window.renderer);
+        SDL_SetRenderLogicalPresentation(window.renderer, window.size_x, window.size_y, SDL_LOGICAL_PRESENTATION_DISABLED);
+
+        if(text_texture != NULL)
+        {
+            SDL_FRect rect;
+            rect.x = 0;
+            rect.y = 0;
+            rect.h = 32;
+            rect.w = 24 * 12;
+            SDL_RenderTexture(window.renderer, text_texture, NULL, &rect);
+        }
         SDL_RenderPresent(window.renderer);
     }
 
@@ -92,5 +127,6 @@ int main(int argc, char* argv[])
     cchip8_free(&emulator);
     app_window_free(&window);
     SDL_Quit();
+    TTF_Quit();
     return 0;
 }

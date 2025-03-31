@@ -4,14 +4,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+static bool sdl_video_was_init = false;
+
 maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_data)
 {
     maybe_t result;
-    if(!SDL_Init(SDL_INIT_VIDEO))
+    if(!sdl_video_was_init)
     {
-        result.ok = false;
-        result.error = "Could not initialize SDL3 video subsystem! ";
-        return result;
+        if(!SDL_InitSubSystem(SDL_INIT_VIDEO))
+        {
+            result.ok = false;
+            result.error = "Could not initialize SDL3 video subsystem! ";
+            return result;
+        }
+        sdl_video_was_init = true; 
     }
 
     self->sdl = SDL_CreateWindow(init_data->name, init_data->size_x, init_data->size_y, init_data->flags);

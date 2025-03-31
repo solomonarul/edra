@@ -24,10 +24,19 @@ file(
         "src/*.c"
 )
 
-add_executable(
-    ${PROJECT_NAME}
-    ${${PROJECT_NAME}_SRC}
-)
+
+if(CMAKE_BUILD_PLATFORM MATCHES "WINDOWS")
+    add_executable(
+        ${PROJECT_NAME}
+        WIN32
+            ${${PROJECT_NAME}_SRC}
+    )
+else()
+    add_executable(
+        ${PROJECT_NAME}
+        ${${PROJECT_NAME}_SRC}
+    )
+endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
@@ -53,12 +62,18 @@ find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
 else()
 find_package(SDL3 REQUIRED)
 endif()
+if(NOT "${SDL3_TTF_PATH}" STREQUAL "")
+find_package(SDL3_ttf REQUIRED PATHS ${SDL3_TTF_PATH})
+else()
+find_package(SDL3_ttf REQUIRED)
+endif()
 target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC
         auxum
         cchip8
         SDL3::SDL3
+        SDL3_ttf::SDL3_ttf
 )
 
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
@@ -83,5 +98,16 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
         NAME ${VITA_APP_NAME}
         FILE platform/vita sce_sys
         FILE assets assets
+    )
+elseif(CMAKE_BUILD_PLATFORM MATCHES "WINDOWS")
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3::SDL3-shared> $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        VERBATIM
+    )
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3_ttf::SDL3_ttf> $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        VERBATIM
     )
 endif()

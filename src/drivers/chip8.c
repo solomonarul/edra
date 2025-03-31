@@ -266,7 +266,7 @@ void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
 
 void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer)
 {
-    SDL_SetRenderLogicalPresentation(renderer, self->state.display_width, self->state.display_height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetRenderLogicalPresentation(renderer, self->state.display_width, self->state.display_height, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
 
     SDL_SetRenderDrawColor(renderer, 25, 25, 25, 255);
     SDL_RenderClear(renderer);
