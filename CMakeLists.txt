@@ -24,9 +24,6 @@ file(
         "src/*.c"
 )
 
-set(LIGHTNING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/lightning-install/include)
-set(LIGHTNING_LIBRARY ${CMAKE_BINARY_DIR}/lightning-install/lib/liblightning.a)
-
 if(CMAKE_BUILD_PLATFORM MATCHES "WINDOWS")
     add_executable(
         ${PROJECT_NAME}
@@ -79,6 +76,35 @@ target_link_libraries(
         SDL3_ttf::SDL3_ttf
         ${LIGHTNING_LIBRARY}
 )
+
+if(DEFINED ENABLE_JIT)
+    if(DEFINED BUILD_LIGHTNING)
+        set(LIGHTNING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/lightning-install/include)
+        set(LIGHTNING_LIBRARY ${CMAKE_BINARY_DIR}/lightning-install/lib/liblightning.a)
+        target_link_libraries(
+            ${PROJECT_NAME}
+            PUBLIC
+                ${LIGHTNING_LIBRARY}
+        )
+        target_include_directories(
+            ${PROJECT_NAME}
+            PUBLIC
+                "inc"
+                ${LIGHTNING_INCLUDE_DIR}
+        )
+    else()
+        target_link_libraries(
+            ${PROJECT_NAME}
+            PUBLIC
+                lightning
+        )
+    endif()
+    target_compile_definitions(
+        ${PROJECT_NAME}
+        PRIVATE
+            JIT_ENABLED
+    )
+endif()
 
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
     ## Configuration options for this app

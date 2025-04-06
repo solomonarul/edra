@@ -3,17 +3,22 @@
 #include "system/text.h"
 #include "system/window.h"
 #include "drivers/chip8.h"
+
+#ifdef JIT_ENABLED
 #include <lightning.h>
 
 static jit_state_t *_jit;
 
-typedef int (*pif)(void);
+typedef int (*pif)(int);
+#endif
 
 int main(int argc, char* argv[])
 {
     UNUSED(argc);
     UNUSED(argv);
 
+#ifdef JIT_ENABLED
+    jit_node_t  *in;
     pif         incr;
 
     init_jit_with_debug(argv[0], stderr);
@@ -21,17 +26,21 @@ int main(int argc, char* argv[])
    
     _jit = jit_new_state();
 
-    jit_prolog();
-    jit_retr_i(42);
+    jit_prolog();                    /*      prolog              */
+    in = jit_arg();                  /*      in = arg            */
+    jit_getarg(JIT_R0, in);          /*      getarg R0           */
+    jit_addi(JIT_R0, JIT_R0, 1);     /*      addi   R0, R0, 1    */
+    jit_ret();                       /*      retr  (R0)          */
 
     *(void **)(&incr) = jit_emit();
-    
 
-    printf("%d + 1 = %d\n", 5, incr());
-
+    jit_print();
     jit_clear_state();
 
+    printf("%d + 1 = %d\n", 5, incr(5));
+    
     jit_destroy_state();
+#endif
 
     // Set up "logging".
     freopen("last.log", "w", stdout);
