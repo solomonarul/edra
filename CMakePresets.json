@@ -3,7 +3,7 @@
     "configurePresets": [
       {
         "name": "windows-base",
-        "generator": "Ninja",
+        "generator": "Unix Makefiles",
         "binaryDir": "${sourceDir}/build",
         "cacheVariables": {
           "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",

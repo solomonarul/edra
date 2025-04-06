@@ -45,4 +45,4 @@ bvr:
 	@cp build/edra.vpk bin/edra.vpk
 
 r:
-	@./bin/${TARGET} ./roms/launch.ini
+	@./bin/${TARGET}

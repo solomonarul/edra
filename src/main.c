@@ -3,11 +3,35 @@
 #include "system/text.h"
 #include "system/window.h"
 #include "drivers/chip8.h"
+#include <lightning.h>
+
+static jit_state_t *_jit;
+
+typedef int (*pif)(void);
 
 int main(int argc, char* argv[])
 {
     UNUSED(argc);
     UNUSED(argv);
+
+    pif         incr;
+
+    init_jit_with_debug(argv[0], stderr);
+    atexit(finish_jit);
+   
+    _jit = jit_new_state();
+
+    jit_prolog();
+    jit_retr_i(42);
+
+    *(void **)(&incr) = jit_emit();
+    
+
+    printf("%d + 1 = %d\n", 5, incr());
+
+    jit_clear_state();
+
+    jit_destroy_state();
 
     // Set up "logging".
     freopen("last.log", "w", stdout);
