@@ -10,9 +10,6 @@
     - d / r -> debug / release.
 - make r for an automated run.
 
-### Other details:
-- when cloning also clone the submodules.
-
 ## Preview:
 
 <p align="center">
@@ -20,8 +17,8 @@
 </p>
 
 ## Part of this project:
-- [auxum](https://github.com/solomonarul/auxum), an utility library.
-- [cchip8](https://github.com/solomonarul/cchip8), agnostic CHIP8 module.
+- [auxum](https://github.com/solomonarul/auxum), an utility library as a git submodule.
+- [cchip8](https://github.com/solomonarul/cchip8), agnostic CHIP8 emulation as a git submodule.
 
 ---
 
