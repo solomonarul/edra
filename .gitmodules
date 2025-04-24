@@ -4,3 +4,6 @@
 [submodule "lib/cchip8"]
 	path = lib/cchip8
 	url = https://github.com/solomonarul/cchip8.git
+[submodule "lib/cbf"]
+	path = lib/cbf
+	url = https://github.com/solomonarul/cbf.git
