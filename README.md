@@ -18,6 +18,7 @@
 
 ## Part of this project:
 - [auxum](https://github.com/solomonarul/auxum), an utility library as a git submodule.
+- [cbf](https://github.com/solomonarul/cbf), agnostic BrainFuck emulation as a git submodule.
 - [cchip8](https://github.com/solomonarul/cchip8), agnostic CHIP8 emulation as a git submodule.
 
 ---
