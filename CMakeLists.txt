@@ -71,6 +71,7 @@ target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC
         auxum
+        cbf
         cchip8
         SDL3::SDL3
         SDL3_ttf::SDL3_ttf

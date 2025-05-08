@@ -1,7 +1,7 @@
 # Edra
 
 ## How to compile:
-- specify SDL3_DIR in the build cache of CMake if needed.
+- specify SDL3_DIR / SDL3_TTF_DIR in the build cache of CMake if needed.
 - run make b{platform}{d/r} for an automated build.
     - platforms:
         - w - Windows
