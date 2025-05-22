@@ -10,19 +10,22 @@ int main(int argc, char* argv[])
     UNUSED(argv);
 
     // Set up "logging".
-    freopen("last.log", "w", stdout);
+    // freopen("last.log", "w", stdout);
 
     // Create BF emulator.
+    FILE* program = fopen("./roms/hello.b", "r");
     cbf_context_t bf_emulator;
     cbf_init(&bf_emulator);
+    cbf_read(&bf_emulator, program);
+    fclose(program);
+
     while(bf_emulator.cpu.interpreter.running == true)
-    {
         bf_interpreter_step(&bf_emulator.cpu.interpreter);
-    }
+
     cbf_free(&bf_emulator);
     
     // Create window.
-    app_window_t window = {0};
+    /*app_window_t window = {0};
     maybe_t result = app_window_init(&window, &(app_window_init_data_t) {
     #ifdef BUILD_TYPE_VITA
         .size_x = 960,
@@ -46,9 +49,9 @@ int main(int argc, char* argv[])
     cchip8_context_t emulator;
     cchip8_init(&emulator);
     emulator.state.get_key_status = cchip8_get_sdl_key_status;
-    emulator.speed = 100000;
+    emulator.speed = 600;
     cchip8_load_default_font(&emulator);
-    /*FILE* rom = fopen("./octogon.ch8", "rb");
+    FILE* rom = fopen("./roms/tetris.ch8", "rb");
     if(rom == NULL)
     {
         cchip8_free(&emulator);
@@ -58,7 +61,7 @@ int main(int argc, char* argv[])
     }
     fread(emulator.memory + 0x200, sizeof(uint8_t), 0x1000 - emulator.state.pc, rom);
     cchip8_load_default_font_hires(&emulator);
-    emulator.state.mode = CHIP8_MODE_SCHIP_MODERN;*/
+    emulator.state.mode = CHIP8_MODE_SCHIP_MODERN;
     uint8_t norom[62] =
     {
         0x61, 0x0e, 0x62, 0x0d, 0xa2, 0x22, 0xd1, 0x27, 
@@ -109,6 +112,6 @@ int main(int argc, char* argv[])
 
     cchip8_free(&emulator);
     app_window_free(&window);
-    SDL_Quit();
+    SDL_Quit();*/
     return 0;
 }
