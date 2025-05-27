@@ -3,7 +3,6 @@
 #include "cbf/state.h"
 
 #include <stdlib.h>
-#include <string.h>
 
 #include <auxum/std.h>
 #include <auxum/file/utils.h>
@@ -37,7 +36,6 @@ uint8_t cbf_load_f(void* data, uint16_t addr)
 
 void cbf_init(cbf_context_t* self)
 {
-    dynarray_init(&self->state.program, sizeof(bf_instruction_t), 0);
     self->state.in = cbf_in_f; self->state.out = cbf_out_f;
     self->state.store = cbf_store_f; self->state.load = cbf_load_f;
     bf_interpreter_init(&self->cpu.interpreter);
@@ -47,78 +45,7 @@ void cbf_init(cbf_context_t* self)
 
 void cbf_load(cbf_context_t* self, char* const rom)
 {
-    dynarray_free(self->state.program);
-    dynarray_init(&self->state.program, sizeof(bf_instruction_t), 0);
-    int size = strlen(rom);
-    bf_instruction_t element;
-    for(int index = 0; index < size; index++)
-        switch(rom[index])
-        {
-        case '+':
-            {
-                element.op = BF_INSTRUCTION_INC;
-                element.arg = 0;
-                dynarray_push_back(&self->state.program, &element);
-                break;
-            }
-        case '-':
-            {
-                element.op = BF_INSTRUCTION_DEC;
-                element.arg = 0;
-                dynarray_push_back(&self->state.program, &element);
-                break;
-            }
-        case '>':
-            {
-                element.op = BF_INSTRUCTION_NEXT;
-                element.arg = 0;
-                dynarray_push_back(&self->state.program, &element);
-                break;
-            }
-        case '<':
-            {
-                element.op = BF_INSTRUCTION_PREV;
-                element.arg = 0;
-                dynarray_push_back(&self->state.program, &element);
-                break;
-            }
-        case '[':
-            {
-                element.op = BF_INSTRUCTION_JUMP_START;
-                element.arg = 0;
-                dynarray_push_back(&self->state.program, &element);
-                break;
-            }
-        case ']':
-            {
-                element.op = BF_INSTRUCTION_JUMP_BACK;
-                element.arg = 0;
-                dynarray_push_back(&self->state.program, &element);
-                break;
-            }
-        case ',':
-            {
-                element.op = BF_INSTRUCTION_INPUT;
-                element.arg = 0;
-                dynarray_push_back(&self->state.program, &element);
-                break;
-            }
-        case '.':
-            {
-                element.op = BF_INSTRUCTION_OUTPUT;
-                element.arg = 0;
-                dynarray_push_back(&self->state.program, &element);
-                break;
-            }
-        default:
-            {
-                // Do nothing for unknown characters.
-                break;
-            }
-        }
-    element.op = BF_INSTRUCTION_END;
-    element.arg = 0;
-    dynarray_push_back(&self->state.program, &element);
+    bf_state_load_program(&self->state, rom);
 }
 
 void cbf_read(cbf_context_t* self, FILE* file)
@@ -128,7 +55,19 @@ void cbf_read(cbf_context_t* self, FILE* file)
     free(rom);
 }
 
+void cbf_step(cbf_context_t* self)
+{
+    if(!self->cpu.interpreter.running) return;
+
+    bf_interpreter_step(&self->cpu.interpreter);
+}
+
+bool cbf_is_running(cbf_context_t* self)
+{
+    return self->cpu.interpreter.running;
+}
+
 void cbf_free(cbf_context_t* self)
 {
-    (void)self;
+    dynarray_free(self->state.program);
 }

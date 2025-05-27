@@ -1,0 +1,30 @@
+{
+   <broken_std_wsl>
+   Memcheck:Leak
+   ...
+   obj:/usr/*lib*/ld-linux*
+}
+{
+   <sdl_leaks>
+   Memcheck:Leak
+   ...
+   fun:SDL_*
+}
+{
+   <sdl_leaks_x11>
+   Memcheck:Leak
+   ...
+   fun:X11_*
+}
+{
+   <sdl_leaks_dbus>
+   Memcheck:Leak
+   ...
+   fun:dbus_*
+}
+{
+   <sdl_leaks_llvm>
+   Memcheck:Leak
+   ...
+   fun:llvm*
+}

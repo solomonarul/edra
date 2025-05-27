@@ -46,3 +46,7 @@ bvr:
 
 r:
 	@./bin/${TARGET}
+
+v:
+	@rm -f output.log
+	@valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/edra >> output.log 2>&1
