@@ -36,6 +36,7 @@ uint8_t cbf_load_f(void* data, uint16_t addr)
 
 void cbf_init(cbf_context_t* self)
 {
+    bf_state_init(&self->state);
     self->state.in = cbf_in_f; self->state.out = cbf_out_f;
     self->state.store = cbf_store_f; self->state.load = cbf_load_f;
     bf_interpreter_init(&self->cpu.interpreter);

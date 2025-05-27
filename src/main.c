@@ -9,9 +9,10 @@ int main(int argc, char* argv[])
     UNUSED(argv);
 
     // Create BF emulator.
-    FILE* program = fopen("./roms/hello.b", "r");
+    FILE* program = fopen("./roms/mandlebrot.b", "r");
     cbf_context_t bf_emulator = {0};
     cbf_init(&bf_emulator);
+    bf_emulator.state.optimizations = BF_OPTIMIZATIONS_INSTRUCTION_FOLDING;
     cbf_read(&bf_emulator, program);
     fclose(program);
 
@@ -25,7 +26,7 @@ int main(int argc, char* argv[])
     uint64_t end = SDL_GetPerformanceCounter();
     double time_spent = (double)(end - begin) * 1000 / SDL_GetPerformanceFrequency();
 
-    printf("[INFO]: Brainfuck program spent %lfms running (%ld clocks).\n", time_spent, end - begin);
+    printf("[INFO]: Brainfuck program spent %lfms running (%ld SDL_GetPerformance clocks).\n", time_spent, end - begin);
 
     cbf_free(&bf_emulator);
     
