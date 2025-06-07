@@ -5,11 +5,10 @@
 #include "auxum/std.h"
 #include <SDL3_ttf/SDL_ttf.h>
 
-struct app_font {
+typedef struct app_font {
     int size;
     TTF_Font* data;
-};
-typedef struct app_font app_font_t;
+} app_font_t;
 
 maybe_t app_font_init_from_path(app_font_t* self, char* const path, float size);
 void app_font_free(app_font_t* self);

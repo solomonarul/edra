@@ -41,7 +41,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 set_property(
     TARGET ${PROJECT_NAME}
-    PROPERTY C_STANDARD 17
+    PROPERTY C_STANDARD 23
 )
 
 target_include_directories(

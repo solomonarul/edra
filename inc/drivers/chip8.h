@@ -26,6 +26,7 @@ void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer);
 bool cchip8_get_sdl_key_status(void* arg, uint8_t key);
 void cchip8_load_default_font(cchip8_context_t* self);
 void cchip8_load_default_font_hires(cchip8_context_t* self);
+void cchip8_load_default_rom(cchip8_context_t* self);
 int cchip8_cpu_thread_function(void* args);
 
 #endif

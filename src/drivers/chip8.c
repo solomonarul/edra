@@ -322,3 +322,19 @@ int cchip8_cpu_thread_function(void* args)
     fprintf(stdout, "[CHP8] Emulator has stopped.\n");
     return 0;
 }
+
+static uint8_t* cchip8_get_default_rom(size_t* size_out)
+{
+    static uint8_t rom[] = {
+        #embed "norom.ch8"
+    };
+    *size_out = sizeof(rom);
+    return rom;
+}
+
+void cchip8_load_default_rom(cchip8_context_t* self)
+{
+    size_t norom_size = 0;
+    uint8_t* norom = cchip8_get_default_rom(&norom_size);
+    memcpy(self->memory + 0x200, norom, norom_size * sizeof(uint8_t));
+}

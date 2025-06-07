@@ -42,6 +42,11 @@ maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_d
     return result;
 }
 
+void app_window_enable_vsync(app_window_t* self, bool status)
+{
+    SDL_SetRenderVSync(self->renderer, status);
+}
+
 void app_window_on_resize(app_window_t* self, int size_x, int size_y)
 {
     self->size_x = size_x;
