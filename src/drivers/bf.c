@@ -1,5 +1,6 @@
 #include "drivers/bf.h"
 #include "auxum/data/dynarray.h"
+#include "cbf/cpu/jit_lightning.h"
 #include "cbf/state.h"
 
 #include <stdlib.h>
@@ -39,9 +40,20 @@ void cbf_init(cbf_context_t* self)
     bf_state_init(&self->state);
     self->state.in = cbf_in_f; self->state.out = cbf_out_f;
     self->state.store = cbf_store_f; self->state.load = cbf_load_f;
-    bf_interpreter_init(&self->cpu.interpreter);
-    self->cpu.interpreter.state = &self->state;
     self->state.aux_arg = self;
+    switch(self->cpu_run_mode)
+    {
+    case BF_RUN_INTERPRETER:
+        bf_interpreter_init(&self->cpu.interpreter, &self->state);
+        
+        break;
+    
+#ifdef JIT_LIGHTNING
+    case BF_RUN_JIT_LIGHTNING:
+        bf_jit_lightning_init(&self->cpu.jit_lightning, &self->state);
+        break;
+#endif
+    }
 }
 
 void cbf_load(cbf_context_t* self, char* const rom)
@@ -58,9 +70,18 @@ void cbf_read(cbf_context_t* self, FILE* file)
 
 void cbf_step(cbf_context_t* self)
 {
-    if(!self->cpu.interpreter.running) return;
-
-    bf_interpreter_step(&self->cpu.interpreter);
+    switch(self->cpu_run_mode)
+    {
+    case BF_RUN_INTERPRETER:
+        bf_interpreter_step(&self->cpu.interpreter);
+        break;
+    
+#ifdef JIT_LIGHTNING
+    case BF_RUN_JIT_LIGHTNING:
+        bf_jit_lightning_step(&self->cpu.jit_lightning);
+        break;
+#endif
+    }
 }
 
 bool cbf_is_running(cbf_context_t* self)

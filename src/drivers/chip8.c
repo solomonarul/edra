@@ -215,32 +215,16 @@ void cchip8_load_default_font_hires(cchip8_context_t* self)
         0x6CF8, 0x6666, 0x6666, 0x6C66, 0x00F8, // D
         0x62FE, 0x6460, 0x647C, 0x6260, 0x00FE, // E
         0x66FE, 0x6462, 0x647C, 0x6060, 0x00F0 // F
-    };
+    }; // This should be embeded like this because we can't really handle the endianness right otherwise.
     memcpy((char*)(self->memory + self->state.hires_font_address), HIRES_FONTSET, sizeof(uint8_t) * HIRES_FONTSET_SIZE);
 }
 
 void cchip8_load_default_font(cchip8_context_t* self)
 {
-    const uint8_t FONTSET_SIZE = 80;
-    static const uint8_t FONTSET[80] = { 
-        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
-        0x20, 0x60, 0x20, 0x20, 0x70, // 1
-        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
-        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
-        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
-        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
-        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
-        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
-        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
-        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
-        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
-        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
-        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
-        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
-        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-        0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-    };  // TODO: make this modifiable from outside?
-    memcpy((char*)(self->memory + self->state.lowres_font_address), FONTSET, sizeof(uint8_t) * FONTSET_SIZE);
+    static uint8_t default_font[] = { 
+        #embed "font.ch8"
+    };
+    memcpy((char*)(self->memory + self->state.lowres_font_address), default_font, sizeof(uint8_t) * sizeof(default_font));
 }
 
 #define THREAD_NANOS (SDL_GetPerformanceCounter() * 1.0 / SDL_GetPerformanceFrequency() * SDL_NS_PER_SECOND)
@@ -278,12 +262,16 @@ void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer)
 
     SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
     
-    SDL_LockRWLockForReading(self->display_lock);
+    if(self->threaded)
+        SDL_LockRWLockForReading(self->display_lock);
+    
     for(uint8_t x = 0; x < self->state.display_width; x++)
         for(uint8_t y = 0; y < self->state.display_height; y++)
             if(bitset_get(&self->display_memory, x + y * self->state.display_width))
                 SDL_RenderPoint(renderer, x, y);
-    SDL_UnlockRWLock(self->display_lock);
+
+    if(self->threaded)
+        SDL_UnlockRWLock(self->display_lock);
 }
 
 bool cchip8_get_sdl_key_status(void* arg, uint8_t key)

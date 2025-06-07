@@ -78,8 +78,8 @@ target_link_libraries(
         ${LIGHTNING_LIBRARY}
 )
 
-if(DEFINED ENABLE_JIT)
-    if(DEFINED BUILD_LIGHTNING)
+if(DEFINED ENABLE_JIT_LIGHTNING)
+    if(DEFINED ENABLE_BUILD_LIGHTNING)
         set(LIGHTNING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/lightning-install/include)
         set(LIGHTNING_LIBRARY ${CMAKE_BINARY_DIR}/lightning-install/lib/liblightning.a)
         target_link_libraries(
@@ -103,7 +103,7 @@ if(DEFINED ENABLE_JIT)
     target_compile_definitions(
         ${PROJECT_NAME}
         PRIVATE
-            JIT_ENABLED
+            JIT_LIGHTNING
     )
 endif()
 

@@ -1,4 +1,5 @@
 #include <auxum/std.h>
+#include <auxum/platform/app.h>
 #include "system/window.h"
 #include "drivers/bf.h"
 #include "drivers/chip8.h"
@@ -8,16 +9,18 @@
 
 int main(int argc, char* argv[])
 {
+    auxum_set_app_path(argv[0]);
     srand(time(NULL));
 
     UNUSED(argc);
     UNUSED(argv);
 
     // Create BF emulator.
-    /*FILE* program = fopen("./roms/bf/hello.b", "r");
+    FILE* program = fopen("./roms/bf/hello.b", "r");
     cbf_context_t bf_emulator = {0};
+    bf_emulator.cpu_run_mode = BF_RUN_JIT_LIGHTNING;
     cbf_init(&bf_emulator);
-    bf_emulator.state.optimizations = BF_OPTIMIZATIONS_INSTRUCTION_FOLDING;
+    bf_emulator.state.optimizations = BF_OPTIMIZATIONS_NONE;
     cbf_read(&bf_emulator, program);
     fclose(program);
 
@@ -33,10 +36,10 @@ int main(int argc, char* argv[])
 
     printf("[INFO]: Brainfuck program spent %lfms running (%ld SDL_GetPerformance clocks).\n", time_spent, end - begin);
 
-    cbf_free(&bf_emulator);*/
+    cbf_free(&bf_emulator);
     
     // Create window.
-    app_window_t window = {0};
+    /*app_window_t window = {0};
     maybe_t result = app_window_init(&window, &(app_window_init_data_t) {
     #ifdef BUILD_TYPE_VITA
         .size_x = 960,
@@ -73,8 +76,8 @@ int main(int argc, char* argv[])
     }
     fread(emulator.memory + 0x200, sizeof(uint8_t), 0x1000 - emulator.state.pc, rom);
     fclose(rom);
-    /*cchip8_load_default_font_hires(&emulator);
-    emulator.state.mode = CHIP8_MODE_SCHIP_MODERN;*/
+    //cchip8_load_default_font_hires(&emulator);
+    //emulator.state.mode = CHIP8_MODE_SCHIP_MODERN;
 
     // Create CPU thread.
     SDL_Thread* cpu_thread = SDL_CreateThread(cchip8_cpu_thread_function, "c8 cpu thr", &emulator);
@@ -106,7 +109,6 @@ int main(int argc, char* argv[])
         cchip8_draw_sdl(&emulator, window.renderer);
         SDL_SetRenderLogicalPresentation(window.renderer, window.size_x, window.size_y, SDL_LOGICAL_PRESENTATION_DISABLED);
         SDL_RenderPresent(window.renderer);
-        SDL_Delay(1);
     }
 
     emulator.cpu.interpreter.running = false;
@@ -114,6 +116,6 @@ int main(int argc, char* argv[])
 
     cchip8_free(&emulator);
     app_window_free(&window);
-    SDL_Quit();
+    SDL_Quit();*/
     return 0;
 }

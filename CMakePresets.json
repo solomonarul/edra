@@ -9,9 +9,8 @@
           "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
           "CMAKE_C_COMPILER": "gcc",
           "CMAKE_BUILD_PLATFORM": "WINDOWS",
-          "CMAKE_BUILD_ARCH": "x64",
-          "ENABLE_JIT": "ON",
-          "BUILD_LIGHTNING": "ON"
+          "ENABLE_JIT_LIGHTNING": "ON",
+          "ENABLE_BUILD_LIGHTNING": "ON"
         } 
       },
       {
@@ -35,7 +34,7 @@
         "cacheVariables": {
           "CMAKE_BUILD_PLATFORM": "UNIX",
           "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-          "ENABLE_JIT": "ON"
+          "ENABLE_JIT_LIGHTNING": "ON"
         } 
       },
       {
@@ -58,10 +57,7 @@
         "binaryDir": "${sourceDir}/build",
         "cacheVariables": {
           "CMAKE_BUILD_PLATFORM": "VITA",
-          "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-          "CMAKE_BUILD_ARCH": "armv7",
-          "ENABLE_JIT": "ON",
-          "BUILD_LIGHTNING": "ON"
+          "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
         } 
       },
       {
