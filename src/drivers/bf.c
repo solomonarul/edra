@@ -23,29 +23,17 @@ void cbf_out_f(void* data, uint8_t ch)
     printf("%c", ch);
 }
 
-void cbf_store_f(void* data, uint16_t addr, uint8_t val)
-{
-    cbf_context_t* const self = (cbf_context_t*) data;
-    self->memory[addr] = val;
-}
-
-uint8_t cbf_load_f(void* data, uint16_t addr)
-{
-    cbf_context_t* const self = (cbf_context_t*) data;
-    return self->memory[addr];
-}
-
 void cbf_init(cbf_context_t* self, bf_run_mode_t run_mode)
 {
     bf_state_init(&self->state);
     self->cpu_run_mode = run_mode;
     self->state.in = cbf_in_f; self->state.out = cbf_out_f;
-    self->state.store = cbf_store_f; self->state.load = cbf_load_f;
     self->state.aux_arg = self;
     switch(self->cpu_run_mode)
     {
     case BF_RUN_INTERPRETER:
         bf_interpreter_init(&self->cpu.interpreter, &self->state);
+        self->cpu.interpreter.memory = self->memory;
         break;
     
 #ifdef JIT_LIGHTNING

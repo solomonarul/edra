@@ -65,11 +65,15 @@ bvr:
 	@cp build/edra.vpk bin/edra.vpk
 
 rt:
-	@./bin/auxum_test
-	@./bin/cbf_test
-	@./bin/cchip8_test
+	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/auxum_test >> bin/output_auxum_test.log 2>&1) || echo "[EROR]: auxum_test failed! Check bin/output_auxum_test.log!"
+	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/cbf_test >> bin/output_cbf_test.log 2>&1) || echo "[EROR]: cbf_test failed! Check bin/output_cbf_test.log!"
+	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/cchip8_test >> bin/output_cchip8_test.log 2>&1) || echo "[EROR]: cchip8_test failed! Check bin/output_cchip8_test.log!"
+	@echo "[INFO]: Tests ran successfully!"
 
-rb:
+urgency:
+	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/cbf_bench >> bin/output_cbf_bench.log 2>&1)
+
+rb:	
 	@./bin/cbf_bench
 
 r:

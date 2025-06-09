@@ -48,7 +48,6 @@ target_include_directories(
     ${PROJECT_NAME}
     PUBLIC
         "inc"
-        ${LIGHTNING_INCLUDE_DIR}
 )
 
 target_compile_definitions(
@@ -75,37 +74,7 @@ target_link_libraries(
         cchip8
         SDL3::SDL3
         SDL3_ttf::SDL3_ttf
-        ${LIGHTNING_LIBRARY}
 )
-
-if(DEFINED ENABLE_JIT_LIGHTNING)
-    if(DEFINED ENABLE_BUILD_LIGHTNING)
-        set(LIGHTNING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/lightning-install/include)
-        set(LIGHTNING_LIBRARY ${CMAKE_BINARY_DIR}/lightning-install/lib/liblightning.a)
-        target_link_libraries(
-            ${PROJECT_NAME}
-            PUBLIC
-                ${LIGHTNING_LIBRARY}
-        )
-        target_include_directories(
-            ${PROJECT_NAME}
-            PUBLIC
-                "inc"
-                ${LIGHTNING_INCLUDE_DIR}
-        )
-    else()
-        target_link_libraries(
-            ${PROJECT_NAME}
-            PUBLIC
-                lightning
-        )
-    endif()
-    target_compile_definitions(
-        ${PROJECT_NAME}
-        PRIVATE
-            JIT_LIGHTNING
-    )
-endif()
 
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
     ## Configuration options for this app
