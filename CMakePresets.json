@@ -28,6 +28,22 @@
         }
       },
       {
+        "name": "windows-test",
+        "inherits": "windows-base",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "BUILD_TESTS": "ON"
+        }
+      },
+      {
+        "name": "windows-benchmarks",
+        "inherits": "windows-base",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Release",
+          "BUILD_BENCHMARKS": "ON"
+        }
+      },
+      {
         "name": "unix-base",
         "generator": "Unix Makefiles",
         "binaryDir": "${sourceDir}/build",
@@ -36,6 +52,22 @@
           "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
           "ENABLE_JIT_LIGHTNING": "ON"
         } 
+      },
+      {
+        "name": "unix-test",
+        "inherits": "unix-base",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "BUILD_TESTS": "ON"
+        }
+      },
+      {
+        "name": "unix-benchmarks",
+        "inherits": "unix-base",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Release",
+          "BUILD_BENCHMARKS": "ON"
+        }
       },
       {
         "name": "unix-debug",

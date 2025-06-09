@@ -11,7 +11,7 @@ if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
         endif()
     endif()
 else()
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../bin/)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/)
 endif()
 
 add_subdirectory(lib)

@@ -22,6 +22,16 @@ bur:
 	@cmake --build build -j${nproc}
 	@cmake -E copy_directory assets ./bin/assets
 
+but:
+	@cmake -B build -S . --preset unix-test
+	@cmake --build build -j${nproc}
+	@cmake -E copy_directory assets ./bin/assets
+
+bub:
+	@cmake -B build -S . --preset unix-benchmarks
+	@cmake --build build -j${nproc}
+	@cmake -E copy_directory assets ./bin/assets
+
 bwd:
 	@cmake -B build -S . --preset windows-debug
 	@cmake --build build
@@ -29,6 +39,16 @@ bwd:
 
 bwr:
 	@cmake -B build -S . --preset windows-release
+	@cmake --build build
+	@cmake -E copy_directory assets ./bin/assets
+
+bwt:
+	@cmake -B build -S . --preset windows-test
+	@cmake --build build
+	@cmake -E copy_directory assets ./bin/assets
+
+bwb:
+	@cmake -B build -S . --preset windows-benchmarks
 	@cmake --build build
 	@cmake -E copy_directory assets ./bin/assets
 
@@ -43,6 +63,14 @@ bvr:
 	@cmake --build build -j${nproc}
 	@mkdir -p bin
 	@cp build/edra.vpk bin/edra.vpk
+
+rt:
+	@./bin/auxum_test
+	@./bin/cbf_test
+	@./bin/cchip8_test
+
+rb:
+	@./bin/cbf_bench
 
 r:
 	@./bin/${TARGET}
