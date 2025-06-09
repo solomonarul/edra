@@ -19,10 +19,10 @@ int main(int argc, char* argv[])
     FILE* program = fopen("./roms/bf/mandlebrot.b", "r");
     cbf_context_t bf_emulator = {0};
     cbf_init(&bf_emulator, BF_RUN_JIT_LIGHTNING);
-    cbf_read(&bf_emulator, program, BF_OPTIMIZATIONS_ALL);
+    size_t rom_size = cbf_read(&bf_emulator, program, BF_OPTIMIZATIONS_ALL);
     fclose(program);
 
-    // printf("[INFO]: Brainfuck program size: %d instructions.\n", bf_emulator.cpu.interpreter.program.size);
+    printf("[INFO]: Brainfuck program size: %ld instructions.\n", rom_size);
 
     uint64_t begin = SDL_GetPerformanceCounter();
 

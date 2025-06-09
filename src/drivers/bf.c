@@ -57,28 +57,26 @@ void cbf_init(cbf_context_t* self, bf_run_mode_t run_mode)
     }
 }
 
-void cbf_load(cbf_context_t* self, char* const rom, bf_optimizations_t optimizations)
+size_t cbf_load(cbf_context_t* self, char* const rom, bf_optimizations_t optimizations)
 {
     switch(self->cpu_run_mode)
     {
     case BF_RUN_INTERPRETER:
-        bf_interpreter_load_program(&self->cpu.interpreter, rom, optimizations);
-        
-        break;
-    
+        return bf_interpreter_load_program(&self->cpu.interpreter, rom, optimizations);
 #ifdef JIT_LIGHTNING
     case BF_RUN_JIT_LIGHTNING:
-        bf_jit_lightning_load_program(&self->cpu.jit_lightning, rom, optimizations);
-        break;
+        return bf_jit_lightning_load_program(&self->cpu.jit_lightning, rom, optimizations);
 #endif
     }
+    return 0;
 }
 
-void cbf_read(cbf_context_t* self, FILE* file, bf_optimizations_t optimizations)
+size_t cbf_read(cbf_context_t* self, FILE* file, bf_optimizations_t optimizations)
 {
     char* rom = file_read_all(file);
-    cbf_load(self, rom, optimizations);
+    size_t result = cbf_load(self, rom, optimizations);
     free(rom);
+    return result;
 }
 
 void cbf_step(cbf_context_t* self)

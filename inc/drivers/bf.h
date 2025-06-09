@@ -29,8 +29,8 @@ typedef struct cbf_context {
 } cbf_context_t;
 
 void cbf_init(cbf_context_t* self, bf_run_mode_t run_mode);
-void cbf_load(cbf_context_t* self, char* const rom, bf_optimizations_t optimizations);
-void cbf_read(cbf_context_t* self, FILE* file, bf_optimizations_t optimizations);
+size_t cbf_load(cbf_context_t* self, char* const rom, bf_optimizations_t optimizations);
+size_t cbf_read(cbf_context_t* self, FILE* file, bf_optimizations_t optimizations);
 bool cbf_is_running(cbf_context_t* self);
 void cbf_step(cbf_context_t* self);
 void cbf_free(cbf_context_t* self);
