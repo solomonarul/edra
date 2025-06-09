@@ -35,9 +35,10 @@ uint8_t cbf_load_f(void* data, uint16_t addr)
     return self->memory[addr];
 }
 
-void cbf_init(cbf_context_t* self)
+void cbf_init(cbf_context_t* self, bf_run_mode_t run_mode)
 {
     bf_state_init(&self->state);
+    self->cpu_run_mode = run_mode;
     self->state.in = cbf_in_f; self->state.out = cbf_out_f;
     self->state.store = cbf_store_f; self->state.load = cbf_load_f;
     self->state.aux_arg = self;
@@ -45,26 +46,38 @@ void cbf_init(cbf_context_t* self)
     {
     case BF_RUN_INTERPRETER:
         bf_interpreter_init(&self->cpu.interpreter, &self->state);
-        
         break;
     
 #ifdef JIT_LIGHTNING
     case BF_RUN_JIT_LIGHTNING:
         bf_jit_lightning_init(&self->cpu.jit_lightning, &self->state);
+        self->cpu.jit_lightning.memory = self->memory;
         break;
 #endif
     }
 }
 
-void cbf_load(cbf_context_t* self, char* const rom)
+void cbf_load(cbf_context_t* self, char* const rom, bf_optimizations_t optimizations)
 {
-    bf_state_load_program(&self->state, rom);
+    switch(self->cpu_run_mode)
+    {
+    case BF_RUN_INTERPRETER:
+        bf_interpreter_load_program(&self->cpu.interpreter, rom, optimizations);
+        
+        break;
+    
+#ifdef JIT_LIGHTNING
+    case BF_RUN_JIT_LIGHTNING:
+        bf_jit_lightning_load_program(&self->cpu.jit_lightning, rom, optimizations);
+        break;
+#endif
+    }
 }
 
-void cbf_read(cbf_context_t* self, FILE* file)
+void cbf_read(cbf_context_t* self, FILE* file, bf_optimizations_t optimizations)
 {
     char* rom = file_read_all(file);
-    cbf_load(self, rom);
+    cbf_load(self, rom, optimizations);
     free(rom);
 }
 
@@ -91,5 +104,5 @@ bool cbf_is_running(cbf_context_t* self)
 
 void cbf_free(cbf_context_t* self)
 {
-    dynarray_free(self->state.program);
+    UNUSED(self);
 }

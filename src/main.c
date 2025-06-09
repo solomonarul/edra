@@ -1,5 +1,5 @@
 #include <auxum/std.h>
-#include <auxum/platform/app.h>
+#include "cbf/state.h"
 #include "system/window.h"
 #include "drivers/bf.h"
 #include "drivers/chip8.h"
@@ -16,15 +16,13 @@ int main(int argc, char* argv[])
     UNUSED(argv);
 
     // Create BF emulator.
-    FILE* program = fopen("./roms/bf/hello.b", "r");
+    FILE* program = fopen("./roms/bf/mandlebrot.b", "r");
     cbf_context_t bf_emulator = {0};
-    bf_emulator.cpu_run_mode = BF_RUN_JIT_LIGHTNING;
-    cbf_init(&bf_emulator);
-    bf_emulator.state.optimizations = BF_OPTIMIZATIONS_NONE;
-    cbf_read(&bf_emulator, program);
+    cbf_init(&bf_emulator, BF_RUN_JIT_LIGHTNING);
+    cbf_read(&bf_emulator, program, BF_OPTIMIZATIONS_ALL);
     fclose(program);
 
-    printf("[INFO]: Brainfuck program size: %d instructions.\n", bf_emulator.state.program.size);
+    // printf("[INFO]: Brainfuck program size: %d instructions.\n", bf_emulator.cpu.interpreter.program.size);
 
     uint64_t begin = SDL_GetPerformanceCounter();
 
