@@ -1,6 +1,4 @@
 #include "drivers/bf.h"
-#include "auxum/data/dynarray.h"
-#include "cbf/cpu/jit_lightning.h"
 #include "cbf/state.h"
 
 #include <stdlib.h>
