@@ -1,8 +1,7 @@
 #include <auxum/std.h>
-#include "cbf/state.h"
 #include "system/window.h"
 #include "drivers/bf.h"
-#include "drivers/chip8.h"
+#include "states/chip8_state.h"
 
 #include <time.h>
 #include <stdlib.h>
@@ -15,8 +14,10 @@ int main(int argc, char* argv[])
     UNUSED(argc);
     UNUSED(argv);
 
+    app_state_init();
+
     // Create BF emulator.
-    FILE* program = fopen("./roms/bf/mandlebrot.b", "r");
+    /*FILE* program = fopen("./roms/bf/mandlebrot.b", "r");
     cbf_context_t bf_emulator = {0};
     cbf_init(&bf_emulator, BF_RUN_INTERPRETER);
     size_t rom_size = cbf_read(&bf_emulator, program, BF_OPTIMIZATIONS_ALL);
@@ -34,10 +35,22 @@ int main(int argc, char* argv[])
 
     printf("[INFO]: Brainfuck program spent %lfms running (%d SDL_GetPerformance clocks).\n", time_spent, (int)(end - begin));
 
-    cbf_free(&bf_emulator);
+    cbf_free(&bf_emulator);*/
+
+    // Create CHIP8 emulator.
+    chip8_app_state_t chip8_state = {0};
+    chip8_app_state_init(&chip8_state);
+    maybe_t load_rom_result = chip8_app_state_load_rom(
+        &chip8_state, CHIP8_MODE_NORMAL,
+        fopen("./roms/c8/games/Tetris [Fran Dachille, 1991].ch8", "rb"), 
+        true, true
+    );
+    if(!IS_OK(load_rom_result))
+        app_show_error(load_rom_result.error);
+    app_state_push(chip8_state.internal);
     
     // Create window.
-    /*app_window_t window = {0};
+    app_window_t window = {0};
     maybe_t result = app_window_init(&window, &(app_window_init_data_t) {
     #ifdef BUILD_TYPE_VITA
         .size_x = 960,
@@ -57,39 +70,11 @@ int main(int argc, char* argv[])
     }
     app_window_enable_vsync(&window, true);
 
-    // Create CHIP8 emulator.
-    cchip8_context_t emulator;
-    cchip8_init(&emulator);
-    emulator.state.get_key_status = cchip8_get_sdl_key_status;
-    emulator.speed = 600;
-    cchip8_load_default_font(&emulator);
-    cchip8_load_default_rom(&emulator);
-    FILE* rom = fopen("./roms/c8/games/Tetris [Fran Dachille, 1991].ch8", "rb");
-    if(rom == NULL)
-    {
-        cchip8_free(&emulator);
-        app_window_free(&window);
-        SDL_Quit();
-        app_show_error("CHIP8 ROM file does not exist! ");
-    }
-    fread(emulator.memory + 0x200, sizeof(uint8_t), 0x1000 - emulator.state.pc, rom);
-    fclose(rom);
-    //cchip8_load_default_font_hires(&emulator);
-    //emulator.state.mode = CHIP8_MODE_SCHIP_MODERN;
-
-    // Create CPU thread.
-    SDL_Thread* cpu_thread = SDL_CreateThread(cchip8_cpu_thread_function, "c8 cpu thr", &emulator);
-    if(cpu_thread == NULL)
-    {
-        cchip8_free(&emulator);
-        app_window_free(&window);
-        app_show_sdl_error("Could not create CHIP8 emulator thread!", NULL);
-    }
-    emulator.threaded = true;
-
     // Main loop.
     SDL_Event event;
     bool app_running = true;
+    long start_time, end_time;
+    start_time = end_time = THREAD_NANOS;
     while(app_running)
     {
         while(SDL_PollEvent(&event))
@@ -104,16 +89,14 @@ int main(int argc, char* argv[])
                 break;
             }
         }
-        cchip8_draw_sdl(&emulator, window.renderer);
-        SDL_SetRenderLogicalPresentation(window.renderer, window.size_x, window.size_y, SDL_LOGICAL_PRESENTATION_DISABLED);
+        end_time = THREAD_NANOS;
+        app_update(end_time - start_time);
+        start_time = end_time;
+        app_render(&window);
         SDL_RenderPresent(window.renderer);
     }
-
-    emulator.cpu.interpreter.running = false;
-    SDL_WaitThread(cpu_thread, NULL); 
-
-    cchip8_free(&emulator);
+    app_state_free();
     app_window_free(&window);
-    SDL_Quit();*/
+    SDL_Quit();
     return 0;
 }

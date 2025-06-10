@@ -243,8 +243,6 @@ void cchip8_load_default_font(cchip8_context_t* self)
     memcpy((char*)(self->memory + self->state.lowres_font_address), FONTSET, sizeof(uint8_t) * FONTSET_SIZE);
 }
 
-#define THREAD_NANOS (SDL_GetPerformanceCounter() * 1.0 / SDL_GetPerformanceFrequency() * SDL_NS_PER_SECOND)
-
 void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
 {
     if(!self->cpu.interpreter.running) return;
