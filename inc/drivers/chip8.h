@@ -2,12 +2,11 @@
 #ifndef CCHIP8_DRIVER_H
 #define CCHIP8_DRIVER_H
 
+#include "../system/state.h"
 #include <auxum/data.h>
 #include <cchip8/state.h>
 #include <cchip8/cpu/interpreter.h>
 #include <SDL3/SDL.h>
-
-#define THREAD_NANOS (SDL_GetPerformanceCounter() * 1.0 / SDL_GetPerformanceFrequency() * SDL_NS_PER_SECOND)
 
 typedef struct cchip8_context {
     bool threaded;

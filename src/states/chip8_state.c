@@ -1,19 +1,31 @@
 #include "states/chip8_state.h"
+#include "drivers/chip8.h"
 
-static void cchip8_app_update(void* self_ref, long dt)
+static void cchip8_app_update(void* self_ref, app_window_t* window, long dt)
 {
     chip8_app_state_t* const self = (chip8_app_state_t*)self_ref;
-    UNUSED(self);
-    UNUSED(dt);
+    if(self->paused)
+        return;
+
+    if(self->thread == NULL)
+        cchip8_step(&self->emulator, SDL_NS_PER_SECOND / dt);
+
+    if(app_input_state_key_pressed(&window->input, SDL_SCANCODE_ESCAPE))
+    {
+        chip8_pause_app_state_init(&self->pause_state);
+        app_state_push(self->pause_state.internal);
+        self->internal.pause(self->internal.userdata);
+    }
 }
 
 static void cchip8_app_render(void* self_ref, app_window_t* window)
 {
     chip8_app_state_t* const self = (chip8_app_state_t*)self_ref;
     cchip8_draw_sdl(&self->emulator, window->renderer);
+    SDL_FlushRenderer(window->renderer);
     SDL_SetRenderLogicalPresentation(
         window->renderer,
-        window->size_x, window->size_y,
+        0, 0,
         SDL_LOGICAL_PRESENTATION_DISABLED
     );
 }
@@ -23,6 +35,12 @@ static void cchip8_app_pause(void* self_ref)
     chip8_app_state_t* const self = (chip8_app_state_t*)self_ref;
     if(self->paused)
         return;
+    self->paused = !self->paused;
+    if(self->thread != NULL)
+    {
+        self->emulator.cpu.interpreter.running = false;
+        SDL_WaitThread(self->thread, NULL);
+    }
 }
 
 static void cchip8_app_unpause(void* self_ref)
@@ -30,6 +48,13 @@ static void cchip8_app_unpause(void* self_ref)
     chip8_app_state_t* const self = (chip8_app_state_t*)self_ref;
     if(!self->paused)
         return;
+    self->paused = !self->paused;
+    if(self->thread != NULL)
+    {
+        // TODO: ugly :c
+        self->emulator.cpu.interpreter.running = true;
+        self->thread = SDL_CreateThread(cchip8_cpu_thread_function, "c8 cpu thr", &self->emulator);
+    }
 }
 
 static void cchip8_app_free(void* self_ref)

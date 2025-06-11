@@ -28,3 +28,9 @@
    ...
    fun:llvm*
 }
+{
+   <sdl_leaks_font>
+   Memcheck:Leak
+   ...
+   fun:FT*
+}

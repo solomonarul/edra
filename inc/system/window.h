@@ -3,11 +3,17 @@
 #define APP_WINDOW_H
 
 #include <auxum/std.h>
-#include <SDL3/SDL.h>
+#include <auxum/data/dynarray.h>
+#include <clay_renderer_SDL3.h>
+#include "input.h"
+#include <SDL3_ttf/SDL_ttf.h>
 
 typedef struct app_window {
+    TTF_Font** fonts;
     SDL_Renderer* renderer;
     SDL_Window* sdl;
+    app_input_state_t input;
+    Clay_SDL3RendererData clay_renderer;
     int size_x, size_y;
 } app_window_t;
 

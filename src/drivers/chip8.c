@@ -321,7 +321,6 @@ int cchip8_cpu_thread_function(void* args)
 
         if(!self->cpu.interpreter.running) break;
     }
-    fprintf(stdout, "[CHP8] Emulator has stopped.\n");
     return 0;
 }
 

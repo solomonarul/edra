@@ -66,6 +66,11 @@ find_package(SDL3_ttf REQUIRED PATHS ${SDL3_TTF_PATH})
 else()
 find_package(SDL3_ttf REQUIRED)
 endif()
+if(NOT "${SDL3_IMAGE_PATH}" STREQUAL "")
+find_package(SDL3_image REQUIRED PATHS ${SDL3_TTF_PATH})
+else()
+find_package(SDL3_image REQUIRED)
+endif()
 target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC
@@ -74,6 +79,8 @@ target_link_libraries(
         cchip8
         SDL3::SDL3
         SDL3_ttf::SDL3_ttf
+        SDL3_image::SDL3_image
+        clay_sdl3
 )
 
 if(CMAKE_BUILD_PLATFORM MATCHES "VITA")
