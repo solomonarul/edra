@@ -27,17 +27,16 @@ void cbf_init(cbf_context_t* self, bf_run_mode_t run_mode)
     self->cpu_run_mode = run_mode;
     self->state.in = cbf_in_f; self->state.out = cbf_out_f;
     self->state.aux_arg = self;
+    self->state.memory = self->memory;
     switch(self->cpu_run_mode)
     {
     case BF_RUN_INTERPRETER:
         bf_interpreter_init(&self->cpu.interpreter, &self->state);
-        self->cpu.interpreter.memory = self->memory;
         break;
     
 #ifdef JIT_LIGHTNING
     case BF_RUN_JIT_LIGHTNING:
         bf_jit_lightning_init(&self->cpu.jit_lightning, &self->state);
-        self->cpu.jit_lightning.memory = self->memory;
         break;
 #endif
     }
