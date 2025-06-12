@@ -103,14 +103,14 @@ static void chip8_pause_state_app_render(void* self_ref, app_window_t* window)
 static void chip8_pause_state_app_pause(void* self_ref)
 {
     chip8_pause_app_state_t* const self = (chip8_pause_app_state_t*)self_ref;
-    if(self->paused)
+    if(self->internal.paused)
         return;
 }
 
 static void chip8_pause_state_app_unpause(void* self_ref)
 {
     chip8_pause_app_state_t* const self = (chip8_pause_app_state_t*)self_ref;
-    if(!self->paused)
+    if(!self->internal.paused)
         return;
 }
 

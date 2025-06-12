@@ -2,7 +2,6 @@
 #include "system/window.h"
 #include "drivers/bf.h"
 #include "states/chip8_state.h"
-#include "states/chip8_pause_state.h"
 
 #include <time.h>
 #include <stdlib.h>

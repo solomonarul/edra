@@ -12,6 +12,7 @@ typedef struct app_state {
     void (*unpause)(void* data);
     void (*free)(void*);
     void* userdata;
+    bool paused;
 } app_state_t;
 
 void app_state_init(void);

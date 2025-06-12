@@ -4,7 +4,7 @@
 static void cchip8_app_update(void* self_ref, app_window_t* window, long dt)
 {
     chip8_app_state_t* const self = (chip8_app_state_t*)self_ref;
-    if(self->paused)
+    if(self->internal.paused)
         return;
 
     if(self->thread == NULL)
@@ -33,9 +33,9 @@ static void cchip8_app_render(void* self_ref, app_window_t* window)
 static void cchip8_app_pause(void* self_ref)
 {
     chip8_app_state_t* const self = (chip8_app_state_t*)self_ref;
-    if(self->paused)
+    if(self->internal.paused)
         return;
-    self->paused = !self->paused;
+    self->internal.paused = !self->internal.paused;
     if(self->thread != NULL)
     {
         self->emulator.cpu.interpreter.running = false;
@@ -46,9 +46,9 @@ static void cchip8_app_pause(void* self_ref)
 static void cchip8_app_unpause(void* self_ref)
 {
     chip8_app_state_t* const self = (chip8_app_state_t*)self_ref;
-    if(!self->paused)
+    if(!self->internal.paused)
         return;
-    self->paused = !self->paused;
+    self->internal.paused = !self->internal.paused;
     if(self->thread != NULL)
     {
         // TODO: ugly :c

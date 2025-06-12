@@ -6,7 +6,6 @@
 #include <auxum/std.h>
 
 typedef struct chip8_pause_app_state {
-    bool paused;
     bool update_skipped_first_frame;
     app_state_t internal;
 } chip8_pause_app_state_t;
