@@ -19,7 +19,7 @@ maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_d
     maybe_t result;
     if(!sdl_video_was_init)
     {
-        if(!SDL_InitSubSystem(SDL_INIT_VIDEO))
+        if(!SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
         {
             result.ok = false;
             result.error = "Could not initialize SDL3 video subsystem! ";

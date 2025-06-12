@@ -21,11 +21,15 @@ int main(int argc, char* argv[])
     chip8_app_state_init(&chip8_state);
     maybe_t load_rom_result = chip8_app_state_load_rom(
         &chip8_state, CHIP8_MODE_NORMAL,
+#ifdef BUILD_TYPE_VITA
+        fopen("ux0:/shared/roms/c8/games/Tetris [Fran Dachille, 1991].ch8", "rb"), 
+#else
         fopen("./roms/c8/games/Tetris [Fran Dachille, 1991].ch8", "rb"), 
+#endif
         true, true
     );
     if(!IS_OK(load_rom_result))
-        app_show_error(load_rom_result.error);
+        printf("[WARN]: Couldn't load ROM: %s\n", load_rom_result.error);
     app_state_push(chip8_state.internal);
     
     // Create window.

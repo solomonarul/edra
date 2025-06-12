@@ -1,4 +1,7 @@
 #include "drivers/chip8.h"
+#include "system/input.h"
+#include "system/state.h"
+#include <SDL3/SDL_gamepad.h>
 #include <auxum/std.h>
 #include <stdlib.h>
 #include <SDL3/SDL.h>
@@ -290,7 +293,10 @@ void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer)
 
 bool cchip8_get_sdl_key_status(void* arg, uint8_t key)
 {
-    UNUSED(arg);
+    cchip8_context_t* const self = arg;
+    if(!self->input || key >= 0x10)
+        return false;
+
     static SDL_Scancode keys[0x10] = {
         SDL_SCANCODE_X,
         SDL_SCANCODE_1, SDL_SCANCODE_2, SDL_SCANCODE_3,
@@ -300,10 +306,18 @@ bool cchip8_get_sdl_key_status(void* arg, uint8_t key)
         SDL_SCANCODE_C, SDL_SCANCODE_4, SDL_SCANCODE_R, SDL_SCANCODE_F,
         SDL_SCANCODE_V,
     };
-    static int keyboard_state_length;
-    static const bool* keyboard_state;
-    keyboard_state = SDL_GetKeyboardState(&keyboard_state_length);
-    return keyboard_state[keys[key]];
+
+    app_input_gamepad_state_t* first_gamepad = app_input_state_get_gamepad(self->input, 0);
+    static SDL_GamepadButton gp_buttons[0x10] = {
+        SDL_GAMEPAD_BUTTON_COUNT,
+        SDL_GAMEPAD_BUTTON_COUNT, SDL_GAMEPAD_BUTTON_COUNT, SDL_GAMEPAD_BUTTON_COUNT,
+        SDL_GAMEPAD_BUTTON_SOUTH, SDL_GAMEPAD_BUTTON_DPAD_LEFT, SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
+        SDL_GAMEPAD_BUTTON_DPAD_DOWN, SDL_GAMEPAD_BUTTON_COUNT, SDL_GAMEPAD_BUTTON_COUNT,
+        SDL_GAMEPAD_BUTTON_COUNT,
+        SDL_GAMEPAD_BUTTON_COUNT, SDL_GAMEPAD_BUTTON_COUNT, SDL_GAMEPAD_BUTTON_COUNT, SDL_GAMEPAD_BUTTON_COUNT,
+        SDL_GAMEPAD_BUTTON_COUNT
+    };
+    return app_input_state_key_down(self->input, keys[key]) || (first_gamepad && app_input_state_gamepad_button_down(first_gamepad, gp_buttons[key])); 
 }
 
 int cchip8_cpu_thread_function(void* args)

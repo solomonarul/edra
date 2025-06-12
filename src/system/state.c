@@ -1,5 +1,6 @@
 #include "system/state.h"
 
+#include <SDL3/SDL_events.h>
 #include <SDL3/SDL_timer.h>
 #include <auxum/data/dynarray.h>
 #include "clay_renderer_SDL3.h"
@@ -87,6 +88,11 @@ void app_run_main_loop(app_window_t* self)
         {
             switch(event.type)
             {
+            case SDL_EVENT_GAMEPAD_ADDED:
+            case SDL_EVENT_GAMEPAD_REMOVED:
+                app_input_state_on_event(&self->input, &event);
+                break;
+
             case SDL_EVENT_QUIT:
                 app_running = false;
                 break;

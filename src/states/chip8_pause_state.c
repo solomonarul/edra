@@ -1,8 +1,6 @@
 #include "states/chip8_pause_state.h"
 #include "clay_renderer_SDL3.h"
 
-#include <stdio.h>
-
 static void chip8_pause_state_app_update(void* self_ref, app_window_t* window, long dt)
 {
     chip8_pause_app_state_t* const self = (chip8_pause_app_state_t*)self_ref;
@@ -13,7 +11,9 @@ static void chip8_pause_state_app_update(void* self_ref, app_window_t* window, l
         return;
     }
 
-    if(app_input_state_key_pressed(&window->input, SDL_SCANCODE_ESCAPE))
+    app_input_gamepad_state_t* first_gamepad = app_input_state_get_gamepad(&window->input, 0);
+    if((first_gamepad && app_input_state_gamepad_button_pressed(first_gamepad, SDL_GAMEPAD_BUTTON_START))
+         || (app_input_state_key_pressed(&window->input, SDL_SCANCODE_ESCAPE)))
     {
         app_state_pop();
         app_state_t* previous = app_state_top();
@@ -24,7 +24,7 @@ static void chip8_pause_state_app_update(void* self_ref, app_window_t* window, l
 #ifdef BUILD_TYPE_VITA
     #define PAUSE_MESSAGE "PRESS START TO RESUME."
 #else
-    #define PAUSE_MESSAGE "PRESS ESCAPE TO RESUME."
+    #define PAUSE_MESSAGE "PRESS ESCAPE / START TO RESUME."
 #endif
 
 static Clay_RenderCommandArray chip8_pause_state_app_get_render_layout(void)

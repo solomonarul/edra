@@ -2,7 +2,7 @@
 #ifndef CCHIP8_DRIVER_H
 #define CCHIP8_DRIVER_H
 
-#include "../system/state.h"
+#include "../system/window.h"
 #include <auxum/data.h>
 #include <cchip8/state.h>
 #include <cchip8/cpu/interpreter.h>
@@ -18,6 +18,7 @@ typedef struct cchip8_context {
         chip8_interpreter_t interpreter;
     } cpu;
     uint8_t memory[0x10000];
+    app_input_state_t* input;
 } cchip8_context_t;
 
 void cchip8_init(cchip8_context_t* self);
