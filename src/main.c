@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     maybe_t load_rom_result = chip8_app_state_load_rom(
         &chip8_state, CHIP8_MODE_NORMAL,
 #ifdef BUILD_TYPE_VITA
-        fopen("ux0:/shared/roms/c8/games/Tetris [Fran Dachille, 1991].ch8", "rb"), 
+        fopen("ux0:/roms/c8/games/Tetris [Fran Dachille, 1991].ch8", "rb"), 
 #else
         fopen("./roms/c8/games/Tetris [Fran Dachille, 1991].ch8", "rb"), 
 #endif
