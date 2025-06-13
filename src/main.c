@@ -1,4 +1,5 @@
 #include <auxum/std.h>
+#include "cbf/state.h"
 #include "system/window.h"
 #include "drivers/bf.h"
 #include "states/chip8_state.h"
@@ -13,6 +14,29 @@ int main(int argc, char* argv[])
 
     UNUSED(argc);
     UNUSED(argv);
+
+    // Create BF emulator.
+    FILE* program = fopen("./roms/bf/mandlebrot.b", "r");
+    cbf_context_t bf_emulator = {0};
+    cbf_init(&bf_emulator, BF_RUN_JIT_LIGHTNING);
+    size_t rom_size = cbf_read(&bf_emulator, program, BF_OPTIMIZATIONS_ALL);
+    fclose(program);
+
+    printf("[INFO]: Brainfuck program size: %ld instructions.\n", rom_size);
+
+    uint64_t begin = SDL_GetPerformanceCounter();
+
+    while(cbf_is_running(&bf_emulator))
+        cbf_step(&bf_emulator);
+
+    uint64_t end = SDL_GetPerformanceCounter();
+    double time_spent = (double)(end - begin) * 1000 / SDL_GetPerformanceFrequency();
+
+    printf("[INFO]: Brainfuck program spent %lfms running (%ld SDL_GetPerformance clocks).\n", time_spent, end - begin);
+
+    cbf_free(&bf_emulator);
+
+    exit(0);
 
     app_state_init();
 
