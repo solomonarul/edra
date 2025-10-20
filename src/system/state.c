@@ -3,7 +3,6 @@
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_timer.h>
 #include <auxum/data/dynarray.h>
-#include "clay_renderer_SDL3.h"
 #include "system/input.h"
 #include "system/window.h"
 
@@ -98,25 +97,6 @@ void app_run_main_loop(app_window_t* self)
                 break;
             case SDL_EVENT_WINDOW_RESIZED:
                 app_window_on_resize(self, event.window.data1, event.window.data2);
-                Clay_SetLayoutDimensions((Clay_Dimensions) { (float) event.window.data1, (float) event.window.data2 });
-                break;
-            case SDL_EVENT_MOUSE_MOTION:
-                Clay_SetPointerState(
-                    (Clay_Vector2) { event.motion.x, event.motion.y },
-                    event.motion.state & SDL_BUTTON_LMASK
-                );
-                break;
-            case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                Clay_SetPointerState(
-                    (Clay_Vector2) { event.button.x, event.button.y },
-                    event.button.button == SDL_BUTTON_LEFT
-                );
-                break;
-            case SDL_EVENT_MOUSE_WHEEL:
-                Clay_UpdateScrollContainers(
-                    true, (Clay_Vector2) { event.wheel.x, event.wheel.y }, 
-                    (end_time - start_time) * 1.0 / SDL_NS_PER_SECOND
-                );
                 break;
             }
         }

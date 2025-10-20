@@ -10,15 +10,6 @@ static void cchip8_app_update(void* self_ref, app_window_t* window, long dt)
 
     if(self->thread == NULL)
         cchip8_step(&self->emulator, SDL_NS_PER_SECOND / dt);
-
-    app_input_gamepad_state_t* first_gamepad = app_input_state_get_gamepad(&window->input, 0);
-    if((first_gamepad && app_input_state_gamepad_button_pressed(first_gamepad, SDL_GAMEPAD_BUTTON_START))
-        || (app_input_state_key_pressed(&window->input, SDL_SCANCODE_ESCAPE)))
-    {
-        chip8_pause_app_state_init(&self->pause_state);
-        app_state_push(self->pause_state.internal);
-        self->internal.pause(self->internal.userdata);
-    }
 }
 
 static void cchip8_app_render(void* self_ref, app_window_t* window)

@@ -64,9 +64,6 @@ target_link_libraries(
         cbf
         cchip8
         SDL3::SDL3
-        SDL3_ttf::SDL3_ttf
-        SDL3_image::SDL3_image
-        clay_sdl3
 )
 
 install(

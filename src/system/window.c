@@ -1,18 +1,12 @@
 #include "system/window.h"
 
 #include <SDL3/SDL_video.h>
-#include <SDL3_ttf/SDL_ttf.h>
 #include <auxum/std.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 static bool sdl_video_was_init = false;
-static bool sdl_external_was_init = false;
-
-static void HandleClayErrors(Clay_ErrorData errorData) {
-    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", errorData.errorText.chars);
-}
 
 maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_data)
 {
@@ -26,17 +20,6 @@ maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_d
             return result;
         }
         sdl_video_was_init = true; 
-    }
-
-    if(!sdl_external_was_init)
-    {
-        if(!TTF_Init())
-        {
-            result.ok = false;
-            result.error = "Could not initialize SDL3 TTF subsystem! ";
-            return result;
-        }
-        sdl_external_was_init = true; 
     }
 
     self->sdl = SDL_CreateWindow(init_data->name, init_data->size_x, init_data->size_y, init_data->flags);
@@ -59,24 +42,6 @@ maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_d
         return result;
     }
 
-    self->fonts = calloc(2, sizeof(TTF_Font*));
-    self->fonts[0] = TTF_OpenFont("./assets/FixedSys302.ttf", 64);
-    self->fonts[1] = TTF_OpenFont("./assets/FixedSys302.ttf", 32);
-
-    uint64_t totalMemorySize = Clay_MinMemorySize();
-    Clay_Arena clayMemory = (Clay_Arena) {
-        .memory = SDL_malloc(totalMemorySize),
-        .capacity = totalMemorySize
-    };
-    Clay_Initialize(
-        clayMemory, (Clay_Dimensions) { (float) self->size_x, (float) self->size_y }, 
-        (Clay_ErrorHandler) { HandleClayErrors, .userData = NULL }
-    );
-    Clay_SetMeasureTextFunction(SDL_MeasureText, self->fonts);
-    self->clay_renderer.renderer = self->renderer;
-    self->clay_renderer.textEngine = TTF_CreateRendererTextEngine(self->renderer);
-    self->clay_renderer.fonts = self->fonts;
-
     app_input_state_init(&self->input);
 
     result.ok = true;
@@ -97,9 +62,6 @@ void app_window_on_resize(app_window_t* self, int size_x, int size_y)
 void app_window_free(app_window_t* self)
 {
     app_input_state_free(&self->input);
-
-    if(self->clay_renderer.textEngine != NULL)
-        TTF_DestroyRendererTextEngine(self->clay_renderer.textEngine);
 
     if(self->renderer != NULL)
         SDL_DestroyRenderer(self->renderer);
