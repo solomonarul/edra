@@ -82,29 +82,6 @@
         "cacheVariables": {
           "CMAKE_BUILD_TYPE": "Release"
         }
-      },
-      {
-        "name": "vita-base",
-        "generator": "Unix Makefiles",
-        "binaryDir": "${sourceDir}/build",
-        "cacheVariables": {
-          "CMAKE_BUILD_PLATFORM": "VITA",
-          "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-        } 
-      },
-      {
-        "name": "vita-debug",
-        "inherits": "vita-base",
-        "cacheVariables": {
-          "CMAKE_BUILD_TYPE": "Debug"
-        }
-      },
-      {
-        "name": "vita-release",
-        "inherits": "vita-base",
-        "cacheVariables": {
-          "CMAKE_BUILD_TYPE": "Release"
-        }
       }
     ]
   }

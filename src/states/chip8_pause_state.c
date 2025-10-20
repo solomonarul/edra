@@ -21,11 +21,7 @@ static void chip8_pause_state_app_update(void* self_ref, app_window_t* window, l
     }
 }
 
-#ifdef BUILD_TYPE_VITA
-    #define PAUSE_MESSAGE "PRESS START TO RESUME."
-#else
-    #define PAUSE_MESSAGE "PRESS ESCAPE / START TO RESUME."
-#endif
+#define PAUSE_MESSAGE "PRESS ESCAPE / START TO RESUME."
 
 static Clay_RenderCommandArray chip8_pause_state_app_get_render_layout(void)
 {
