@@ -53,14 +53,11 @@ bwb:
 	@cmake --install build --prefix out
 
 rut:
-	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/auxum_test > bin/output_auxum_test.log 2>&1) || echo "[EROR]: auxum_test failed! Check bin/output_auxum_test.log!"
-	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/cbf_test > bin/output_cbf_test.log 2>&1) || echo "[EROR]: cbf_test failed! Check bin/output_cbf_test.log!"
-	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/cchip8_test > bin/output_cchip8_test.log 2>&1) || echo "[EROR]: cchip8_test failed! Check bin/output_cchip8_test.log!"
+	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./out/bin/auxum_test > ./out/bin/output_auxum_test.log 2>&1) || echo "[EROR]: auxum_test failed! Check out/bin/output_auxum_test.log!"
+	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./out/bin/cbf_test > ./out/bin/output_cbf_test.log 2>&1) || echo "[EROR]: cbf_test failed! Check out/bin/output_cbf_test.log!"
+	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./out/bin/cchip8_test > ./out/bin/output_cchip8_test.log 2>&1) || echo "[EROR]: cchip8_test failed! Check out/bin/output_cchip8_test.log!"
 	@rm -rf vgcore.*
 	@echo "[INFO]: Tests ran successfully!"
-
-urgency:
-	@(valgrind --suppressions=./.dev/valgrind.supp --leak-check=full --show-leak-kinds=all --track-origins=yes -s ./bin/cbf_bench >> bin/output_cbf_bench.log 2>&1)
 
 rb:	
 	@./out/bin/cbf_bench

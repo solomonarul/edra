@@ -22,6 +22,14 @@ maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_d
         sdl_video_was_init = true; 
     }
 
+    self->gpu = SDL_CreateGPUDevice(SDL_GPU_SHADERFORMAT_SPIRV | SDL_GPU_SHADERFORMAT_DXIL | SDL_GPU_SHADERFORMAT_MSL, true, NULL);
+    if(self->gpu == NULL)
+    {
+        result.ok = false;
+        result.error = "Could not create SDL3 GPU device! ";
+        return result;
+    }
+
     self->sdl = SDL_CreateWindow(init_data->name, init_data->size_x, init_data->size_y, init_data->flags);
     if(self->sdl == NULL)
     {
@@ -31,16 +39,16 @@ maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_d
     }
     self->size_x = init_data->size_x;
     self->size_y = init_data->size_y;
-    SDL_SetWindowMinimumSize(self->sdl, 640, 320);
 
-    self->renderer = SDL_CreateRenderer(self->sdl, NULL);
-    if(self->renderer == NULL)
+    if(!SDL_ClaimWindowForGPUDevice(self->gpu, self->sdl))
     {
-        SDL_DestroyWindow(self->sdl);
         result.ok = false;
-        result.error = "Could not create SDL3 renderer! ";
-        return result;
+        result.error = "Could not claim SDL3 window for GPU! ";
+        return result;        
     }
+
+    // TODO: not like this.
+    // SDL_SetWindowMinimumSize(self->sdl, 640, 320);
 
     app_input_state_init(&self->input);
 
@@ -50,7 +58,11 @@ maybe_t app_window_init(app_window_t* self, app_window_init_data_t* const init_d
 
 void app_window_enable_vsync(app_window_t* self, bool status)
 {
-    SDL_SetRenderVSync(self->renderer, status);
+    if(!SDL_SetGPUSwapchainParameters(self->gpu, self->sdl, SDL_GPU_SWAPCHAINCOMPOSITION_SDR,
+       status ? SDL_GPU_PRESENTMODE_VSYNC : SDL_GPU_PRESENTMODE_IMMEDIATE))
+    {
+        // TODO: error out.
+    }
 }
 
 void app_window_on_resize(app_window_t* self, int size_x, int size_y)
@@ -63,8 +75,8 @@ void app_window_free(app_window_t* self)
 {
     app_input_state_free(&self->input);
 
-    if(self->renderer != NULL)
-        SDL_DestroyRenderer(self->renderer);
+    if(self->gpu != NULL)
+        SDL_DestroyGPUDevice(self->gpu);
 
     if(self->sdl != NULL)
         SDL_DestroyWindow(self->sdl);

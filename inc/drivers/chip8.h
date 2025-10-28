@@ -24,7 +24,7 @@ typedef struct cchip8_context {
 void cchip8_init(cchip8_context_t* self);
 void cchip8_free(cchip8_context_t* self);
 void cchip8_step(cchip8_context_t* self, uint32_t update_rate);
-void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer);
+void cchip8_draw_sdl_gpu(cchip8_context_t* self, app_window_t* window, SDL_GPUCommandBuffer* commands, SDL_GPUTexture* swapchainTexture);
 bool cchip8_get_sdl_key_status(void* arg, uint8_t key);
 void cchip8_load_default_font(cchip8_context_t* self);
 void cchip8_load_default_font_hires(cchip8_context_t* self);

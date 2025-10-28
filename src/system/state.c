@@ -54,13 +54,13 @@ void app_update(app_window_t* window, long dt)
     }
 }
 
-void app_render(app_window_t* window)
+void app_render(app_window_t* window, SDL_GPUCommandBuffer* buffer, SDL_GPUTexture* swapchainTexture)
 {
     for(size_t index = 0; index < states.size; index++)
     {
         app_state_t* const state = dynarray_get(states, index);
         if(state->render != NULL)
-            state->render(state->userdata, window);
+            state->render(state->userdata, window, buffer, swapchainTexture);
     }
 }
 
@@ -95,6 +95,7 @@ void app_run_main_loop(app_window_t* self)
             case SDL_EVENT_QUIT:
                 app_running = false;
                 break;
+
             case SDL_EVENT_WINDOW_RESIZED:
                 app_window_on_resize(self, event.window.data1, event.window.data2);
                 break;
@@ -104,7 +105,23 @@ void app_run_main_loop(app_window_t* self)
         app_update(self, end_time - start_time);
         app_input_state_update(&self->input, end_time - start_time);
         start_time = end_time;
-        app_render(self);
-        SDL_RenderPresent(self->renderer);
+
+        SDL_GPUCommandBuffer* buffer = SDL_AcquireGPUCommandBuffer(self->gpu);
+        if(!buffer)
+        {
+            // TODO: error out.
+            return;
+        }
+
+        SDL_GPUTexture* swapchainTexture;
+        if (!SDL_WaitAndAcquireGPUSwapchainTexture(buffer, self->sdl, &swapchainTexture, NULL, NULL))
+        {
+            // TODO: error out.
+            return;
+        }
+
+        app_render(self, buffer, swapchainTexture);
+        
+        SDL_SubmitGPUCommandBuffer(buffer);
     }
 }

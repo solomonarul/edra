@@ -1,7 +1,5 @@
 #include <auxum/std.h>
-#include "cbf/state.h"
 #include "system/window.h"
-#include "drivers/bf.h"
 #include "states/chip8_state.h"
 
 #include <time.h>
@@ -13,28 +11,6 @@ int main(int argc, char* argv[])
     srand(time(NULL));
 
     UNUSED(argc);
-    UNUSED(argv);
-
-    // Create BF emulator.
-    /*FILE* program = fopen("./roms/bf/mandlebrot.b", "r");
-    cbf_context_t bf_emulator = {0};
-    cbf_init(&bf_emulator, BF_RUN_JIT_LIGHTNING);
-    size_t rom_size = cbf_read(&bf_emulator, program, BF_OPTIMIZATIONS_ALL);
-    fclose(program);
-
-    printf("[INFO]: Brainfuck program size: %ld instructions.\n", rom_size);
-
-    uint64_t begin = SDL_GetPerformanceCounter();
-
-    while(cbf_is_running(&bf_emulator))
-        cbf_step(&bf_emulator);
-
-    uint64_t end = SDL_GetPerformanceCounter();
-    double time_spent = (double)(end - begin) * 1000 / SDL_GetPerformanceFrequency();
-
-    printf("[INFO]: Brainfuck program spent %lfms running (%ld SDL_GetPerformance clocks).\n", time_spent, end - begin);
-
-    cbf_free(&bf_emulator);*/
 
     app_state_init();
 
@@ -53,8 +29,8 @@ int main(int argc, char* argv[])
     // Create window.
     app_window_t window = {0};
     maybe_t result = app_window_init(&window, &(app_window_init_data_t) {
-        .size_x = 640,
-        .size_y = 320,
+        .size_x = 960,
+        .size_y = 540,
         .flags = SDL_WINDOW_RESIZABLE,
         "Edra | cCHIP8"
     });

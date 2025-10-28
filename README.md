@@ -11,7 +11,7 @@
 
 ### Notice:
 
-- I dropped PSVita support since I plan on moving to SDL3's GPU API. [Last commit for future reference.](https://github.com/solomonarul/edra/commit/88842f13a30e4ab5b3582cdee04944e504cc1ec4)
+- I dropped PSVita support since I plan on moving to SDL3's GPU API. [Last commit for future reference.](https://github.com/solomonarul/edra/commit/88842f13a30e4ab5b3582cdee04944e504cc1ec4) I might change my mind later.
 
 ## Preview:
 

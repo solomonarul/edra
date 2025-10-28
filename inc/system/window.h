@@ -7,7 +7,7 @@
 #include "input.h"
 
 typedef struct app_window {
-    SDL_Renderer* renderer;
+    SDL_GPUDevice* gpu;
     SDL_Window* sdl;
     app_input_state_t input;
     int size_x, size_y;

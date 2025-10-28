@@ -12,16 +12,11 @@ static void cchip8_app_update(void* self_ref, app_window_t* window, long dt)
         cchip8_step(&self->emulator, SDL_NS_PER_SECOND / dt);
 }
 
-static void cchip8_app_render(void* self_ref, app_window_t* window)
+static void cchip8_app_render(void* self_ref, app_window_t* window, SDL_GPUCommandBuffer* commands, SDL_GPUTexture* swapchainTexture)
 {
+    UNUSED(self_ref); UNUSED(window); UNUSED(swapchainTexture);
     chip8_app_state_t* const self = (chip8_app_state_t*)self_ref;
-    cchip8_draw_sdl(&self->emulator, window->renderer);
-    SDL_FlushRenderer(window->renderer);
-    SDL_SetRenderLogicalPresentation(
-        window->renderer,
-        0, 0,
-        SDL_LOGICAL_PRESENTATION_DISABLED
-    );
+    cchip8_draw_sdl_gpu(&self->emulator, window, commands, swapchainTexture);
 }
 
 static void cchip8_app_pause(void* self_ref)

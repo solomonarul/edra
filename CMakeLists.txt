@@ -66,7 +66,9 @@ target_link_libraries(
         SDL3::SDL3
 )
 
+if(NOT BUILD_TESTS)
 install(
     TARGETS
     ${PROJECT_NAME}
 )
+endif()

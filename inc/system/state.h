@@ -7,7 +7,7 @@
 
 typedef struct app_state {
     void (*update)(void* data, app_window_t* window, long dt);
-    void (*render)(void* data, app_window_t* window);
+    void (*render)(void* data, app_window_t* window, SDL_GPUCommandBuffer* commands, SDL_GPUTexture* swapchain);
     void (*pause)(void* data);
     void (*unpause)(void* data);
     void (*free)(void*);
@@ -22,7 +22,7 @@ app_state_t app_state_remove(size_t index);
 app_state_t* app_state_top(void);
 size_t app_state_get_count(void);
 void app_update(app_window_t* self, long dt);
-void app_render(app_window_t* window);
+void app_render(app_window_t* window, SDL_GPUCommandBuffer* commands, SDL_GPUTexture* swapchain);
 void app_state_free(void);
 
 #define THREAD_NANOS (SDL_GetPerformanceCounter() * 1.0 / SDL_GetPerformanceFrequency() * SDL_NS_PER_SECOND)

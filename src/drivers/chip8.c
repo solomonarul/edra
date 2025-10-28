@@ -270,25 +270,81 @@ void cchip8_step(cchip8_context_t* self, uint32_t update_rate)
     }
 }
 
-void cchip8_draw_sdl(cchip8_context_t* self, SDL_Renderer* renderer)
+void cchip8_draw_sdl_gpu(cchip8_context_t* self, app_window_t* window, SDL_GPUCommandBuffer* commands, SDL_GPUTexture* swapchainTexture)
 {
-    SDL_SetRenderLogicalPresentation(renderer, self->state.display_width, self->state.display_height, SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
-
-    SDL_SetRenderDrawColor(renderer, 25, 25, 25, 255);
-    SDL_RenderClear(renderer);
-
-    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
-    
-    if(self->threaded)
+    if (self->threaded)
         SDL_LockRWLockForReading(self->display_lock);
-    
-    for(uint8_t x = 0; x < self->state.display_width; x++)
-        for(uint8_t y = 0; y < self->state.display_height; y++)
-            if(bitset_get(&self->display_memory, x + y * self->state.display_width))
-                SDL_RenderPoint(renderer, x, y);
 
-    if(self->threaded)
+    const uint32_t w = self->state.display_width;
+    const uint32_t h = self->state.display_height;
+
+    static SDL_GPUTransferBuffer* display_buffer = NULL;
+    display_buffer = SDL_CreateGPUTransferBuffer(window->gpu, &(SDL_GPUTransferBufferCreateInfo) {
+        .size = w * h,
+        .usage = SDL_GPU_BUFFERUSAGE_GRAPHICS_STORAGE_READ
+    });
+    void* mapped_display_data = SDL_MapGPUTransferBuffer(window->gpu, display_buffer, false);
+    for(size_t y = 0; y < h; y++)
+        for(size_t x = 0; x < w; x++)
+            ((uint8_t*)mapped_display_data)[y * w + x] = bitset_get(&self->display_memory, y * w + x) ? 255 : 0;
+    SDL_UnmapGPUTransferBuffer(window->gpu, display_buffer);
+
+    if (self->threaded)
         SDL_UnlockRWLock(self->display_lock);
+
+    static SDL_GPUTexture* display_texture = NULL;
+    display_texture = SDL_CreateGPUTexture(window->gpu, &(SDL_GPUTextureCreateInfo){
+        .type                   = SDL_GPU_TEXTURETYPE_2D,
+        .format                 = SDL_GPU_TEXTUREFORMAT_R8_UNORM,
+        .width                  = w,
+        .height                 = h,
+        .layer_count_or_depth   = 1,
+        .num_levels             = 1,
+        .usage                  = SDL_GPU_TEXTUREUSAGE_SAMPLER
+    });
+
+    SDL_GPUCopyPass* copyPass = SDL_BeginGPUCopyPass(commands);
+	SDL_UploadToGPUTexture(
+		copyPass,
+		&(SDL_GPUTextureTransferInfo) {
+			.transfer_buffer = display_buffer,
+			.offset = 0,
+		},
+		&(SDL_GPUTextureRegion){
+			.texture = display_texture,
+			.w = w,
+			.h = h,
+			.d = 1
+		},
+		false
+	);
+    SDL_EndGPUCopyPass(copyPass);
+    SDL_ReleaseGPUTransferBuffer(window->gpu, display_buffer);
+
+    SDL_GPUColorTargetInfo colorTargetInfo = {0};
+    colorTargetInfo.texture = swapchainTexture;
+    colorTargetInfo.clear_color = (SDL_FColor){0.0f, 0.0f, 0.0f, 1.0f};
+    colorTargetInfo.load_op = SDL_GPU_LOADOP_CLEAR;
+    colorTargetInfo.store_op = SDL_GPU_STOREOP_STORE;
+
+    SDL_GPURenderPass* renderPass = SDL_BeginGPURenderPass(commands, &colorTargetInfo, 1, NULL);
+    SDL_EndGPURenderPass(renderPass);
+
+    SDL_GPUBlitInfo blit = {0};
+    blit.source.texture = display_texture;
+    blit.source.x = 0.0f;
+    blit.source.y = 0.0f;
+    blit.source.w = (float)w;
+    blit.source.h = (float)h;
+    blit.destination.texture = swapchainTexture;
+    blit.destination.x = 0.0f;
+    blit.destination.y = 0.0f;
+    blit.destination.w = w * 10.0f; // scaling factor
+    blit.destination.h = h * 10.0f;
+    blit.filter = SDL_GPU_FILTER_NEAREST;
+
+    SDL_BlitGPUTexture(commands, &blit);
+    SDL_ReleaseGPUTexture(window->gpu, display_texture);
 }
 
 bool cchip8_get_sdl_key_status(void* arg, uint8_t key)
