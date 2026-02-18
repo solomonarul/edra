@@ -33,12 +33,6 @@ void cbf_init(cbf_context_t* self, bf_run_mode_t run_mode)
     case BF_RUN_INTERPRETER:
         bf_interpreter_init(&self->cpu.interpreter, &self->state);
         break;
-    
-#ifdef JIT_LIGHTNING
-    case BF_RUN_JIT_LIGHTNING:
-        bf_jit_lightning_init(&self->cpu.jit_lightning, &self->state);
-        break;
-#endif
     }
 }
 
@@ -67,12 +61,6 @@ void cbf_step(cbf_context_t* self)
     case BF_RUN_INTERPRETER:
         bf_interpreter_step(&self->cpu.interpreter);
         break;
-    
-#ifdef JIT_LIGHTNING
-    case BF_RUN_JIT_LIGHTNING:
-        bf_jit_lightning_step(&self->cpu.jit_lightning);
-        break;
-#endif
     }
 }
 
