@@ -7,9 +7,3 @@
 [submodule "lib/cbf"]
 	path = lib/cbf
 	url = https://github.com/solomonarul/cbf.git
-[submodule "lib/clay"]
-	path = lib/clay
-	url = https://github.com/nicbarker/clay.git
-[submodule "lib/clay_sdl3"]
-	path = lib/clay_sdl3
-	url = https://github.com/solomonarul/clay_sdl3_edra.git
