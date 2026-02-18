@@ -1,17 +1,13 @@
 # Edra
 
 ## How to compile:
-- specify SDL3_DIR / SDL3_TTF_DIR in the build cache of CMake if needed.
+- specify SDL3_DIR in the build cache of CMake if needed.
 - run make b{platform}{d/r} for an automated build.
     - platforms:
         - w - Windows
         - u - Unix
     - d / r -> debug / release.
 - make r for an automated run.
-
-### Notice:
-
-- I dropped PSVita support since I plan on moving to SDL3's GPU API. [Last commit for future reference.](https://github.com/solomonarul/edra/commit/88842f13a30e4ab5b3582cdee04944e504cc1ec4) I might change my mind later.
 
 ## Preview:
 
@@ -23,6 +19,10 @@
 - [auxum](https://github.com/solomonarul/auxum), an utility library as a git submodule.
 - [cbf](https://github.com/solomonarul/cbf), agnostic BrainFuck emulation as a git submodule.
 - [cchip8](https://github.com/solomonarul/cchip8), agnostic CHIP8 emulation as a git submodule.
+
+### Notice:
+
+- I dropped PSVita support since I plan on moving to SDL3's GPU API. [Last commit for future reference.](https://github.com/solomonarul/edra/commit/88842f13a30e4ab5b3582cdee04944e504cc1ec4)
 
 ---
 

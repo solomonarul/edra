@@ -23,7 +23,11 @@ else()
     )
 endif()
 
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(
+    ${PROJECT_NAME}
+    PRIVATE
+        -Wall -Wextra -Wpedantic -Werror
+)
 
 set_property(
     TARGET ${PROJECT_NAME}
@@ -42,21 +46,7 @@ target_compile_definitions(
         BUILD_TYPE_${CMAKE_BUILD_PLATFORM}
 )
 
-if(NOT "${SDL3_PATH}" STREQUAL "")
-find_package(SDL3 REQUIRED PATHS ${SDL3_PATH})
-else()
 find_package(SDL3 REQUIRED)
-endif()
-if(NOT "${SDL3_TTF_PATH}" STREQUAL "")
-find_package(SDL3_ttf REQUIRED PATHS ${SDL3_TTF_PATH})
-else()
-find_package(SDL3_ttf REQUIRED)
-endif()
-if(NOT "${SDL3_IMAGE_PATH}" STREQUAL "")
-find_package(SDL3_image REQUIRED PATHS ${SDL3_TTF_PATH})
-else()
-find_package(SDL3_image REQUIRED)
-endif()
 target_link_libraries(
     ${PROJECT_NAME}
     PUBLIC
@@ -66,9 +56,7 @@ target_link_libraries(
         SDL3::SDL3
 )
 
-if(NOT BUILD_TESTS)
 install(
     TARGETS
     ${PROJECT_NAME}
 )
-endif()

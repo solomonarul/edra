@@ -8,9 +8,7 @@
         "cacheVariables": {
           "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
           "CMAKE_C_COMPILER": "gcc",
-          "CMAKE_BUILD_PLATFORM": "WINDOWS",
-          "ENABLE_JIT_LIGHTNING": "ON",
-          "ENABLE_BUILD_LIGHTNING": "ON"
+          "CMAKE_BUILD_PLATFORM": "WINDOWS"
         } 
       },
       {
@@ -28,14 +26,6 @@
         }
       },
       {
-        "name": "windows-test",
-        "inherits": "windows-base",
-        "cacheVariables": {
-          "CMAKE_BUILD_TYPE": "Debug",
-          "BUILD_TESTS": "ON"
-        }
-      },
-      {
         "name": "windows-benchmarks",
         "inherits": "windows-base",
         "cacheVariables": {
@@ -49,17 +39,8 @@
         "binaryDir": "${sourceDir}/build",
         "cacheVariables": {
           "CMAKE_BUILD_PLATFORM": "UNIX",
-          "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-          "ENABLE_JIT_LIGHTNING": "ON"
+          "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
         } 
-      },
-      {
-        "name": "unix-test",
-        "inherits": "unix-base",
-        "cacheVariables": {
-          "CMAKE_BUILD_TYPE": "Debug",
-          "BUILD_TESTS": "ON"
-        }
       },
       {
         "name": "unix-benchmarks",
